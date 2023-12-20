@@ -9,20 +9,20 @@
             <form id="registrationForm">
                 <h2>{{nhankhau['form_name']}}</h2>
                 <label for="cccd">CCCD:</label>
-                <input type="text" id="cccd" name="cccd" required><br>
+                <input type="text" id="cccd" name="CCCD" required><br>
                 <label for="hoTen">Họ và Tên:</label>
-                <input type="text" id="hoTen" name="hoTen" required><br>
+                <input type="text" id="hoTen" name="HO_TEN" required><br>
                 <label for="ngaySinh">Ngày Sinh:</label>
-                <input type="date" id="ngaySinh" name="ngaySinh" required><br>
+                <input type="date" id="ngaySinh" name="NGAY_SINH" required><br>
                 <label for="quanHe">Quan Hệ:</label>
-                <input type="text" id="quanHe" name="quanHe"><br>
+                <input type="text" id="quanHe" name="QUAN_HE"><br>
                 <label for="tinhTrangCuTru">Tình Trạng Cư Trú:</label>
-                <select id="tinhTrangCuTru" name="tinhTrangCuTru">
+                <select id="tinhTrangCuTru" name="TINH_TRANG_CU_TRU">
                     <option value="Yes">Permanent</option>
                     <option value="No">Temporary</option>
                 </select><br>
                 <label for="idHo">ID Hộ:</label>
-                <input type="text" id="idHo" name="idHo"><br>
+                <input type="text" id="idHo" name="ID_HO"><br>
                 <input type="submit">
             </form>
             <script src="{{ url_for('static', filename='js/form_nhankhau.js') }}"></script>

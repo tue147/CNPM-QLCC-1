@@ -125,8 +125,17 @@ def HK_update():
 def HK_update_apply():
   data = request.form
   print(data)
-  # update hk
-  
+  id = data.get('ID_HO')
+  data = {k: v for k, v in data.items() if k != 'ID_HO'}
+  if data['LOAI_PHONG'] == 'standard':
+    data['LOAI_PHONG'] = 0
+  else:
+    data['LOAI_PHONG'] = 1
+  modify('ho_gd',
+         position=data.keys(),
+         value=data.values(),
+         index=id,
+         primary_key="ID_HO")
   # commit()
   return render_template('submit_confirmation.html')
 
@@ -188,11 +197,15 @@ def NK_add_apply():
   # commit()
   return render_template('submit_confirmation.html', form=values)
 
+@app.route('/api/NK/update')
+def NK_update():
+  return render_template('form_nhankhau.html', nhankhau={'title':'Thay đổi Nhân Khẩu', 'func':'update', 'form_name':'Resident Form'})
 
 @app.route('/api/NK/update/apply', methods=['post'])
 def NK_update_apply():
   data = request.form
   print(data)
+  id = data.get('CCCD')
   data = {k: v for k, v in data.items() if k != 'CCCD'}
   modify('nhan_khau',
          position=data.keys(),
@@ -200,7 +213,7 @@ def NK_update_apply():
          index=id,
          primary_key="CCCD")
   # commit()
-  return render_template('update_nhankhau_submitted.html')
+  return render_template('submit_confirmation.html')
 
 @app.route('/api/NK/delete')
 def NK_delete():

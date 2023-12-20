@@ -1,50 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>Quản lý chung cư</title>
-
-    <!-- Custom fonts for this template-->
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-        <link
-            href="{{ url_for('static', filename='css/style_admin.css') }}" }}"
-            rel="stylesheet">
-
-    <!-- Custom styles for this template--> 
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
-
-</head>
+{% include 'main_design/header.html' %}
 
 <body id="page-top">
-          {% include 'main_design/page_wrapper.html' %}
-
-                  {% include 'main_design/taikhoan_formain.html' %}
-
-                  {% include 'main_design/nhankhau_formain.html' %}
-
-                  {% include 'main_design/hokhau_formain.html' %}
-
-                  {% include 'main_design/thuchi_formain.html' %}
-
-
-                  <!-- Divider -->
-                  <hr class="sidebar-divider">
-
-               </ul>
-              <!-- End of Sidebar -->
-
-        <!-- Content Wrapper -->
-        {% include 'main_design/content_wrapper.html' %}
-
-        <!-- End of Content Wrapper -->
-        {% include 'main_design/dashboard.html' %}
-      
-        <!-- Content Row -->
-        {% include 'main_design/random.html' %}
+  {% include 'main_design/page_wrapper.html' %}
+  
+  {% include 'main_design/taikhoan_formain.html' %}
+  
+  {% include 'main_design/nhankhau_formain.html' %}
+  
+  {% include 'main_design/hokhau_formain.html' %}
+  
+  {% include 'main_design/thuchi_formain.html' %}
+  
+  
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+  
+  </ul>
+  <!-- End of Sidebar -->
+  
+  <!-- Content Wrapper -->
+  {% include 'main_design/content_wrapper.html' %}
+  
+  <!-- End of Content Wrapper -->
+  {% include 'main_design/dashboard.html' %} </div>  <!-- this is /div crucial -->
+  {% include 'functionality/user_function.html' %}
+  
+  {% include 'main_design/random.html' %}
