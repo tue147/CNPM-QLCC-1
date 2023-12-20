@@ -69,11 +69,11 @@ def register():
 
 @app.route('/admin')
 def admin():
-  return render_template('admin.html', user={'user':'admin'})
+  return render_template('admin.html', user={'user':'admin', 'USER':'ADMIN'})
 
 @app.route('/user')
 def user():
-  return render_template('user.html', user={'user':'user'})
+  return render_template('user.html', user={'user':'user', 'USER':'USER'})
 
 
 '''
@@ -83,8 +83,15 @@ Ho Khau
 
 @app.route('/api/HK')
 def HK():
-  return render_template('main_hokhau.html')
-
+  try:
+    if 'id' in session:
+      if id:
+        return render_template('main_hokhau.html')   # update for admin
+      else:
+        return render_template('main_hokhau.html')    # update for user
+  except:
+    pass
+  return redirect('/login')   # if something wrong: redirect to login
 
 @app.route('/api/HK/add')
 def HK_add():
@@ -148,7 +155,15 @@ Nhan khau
 '''
 @app.route('/api/NK')
 def NK():
-  return render_template('main_nhankhau.html')
+  try:
+    if 'id' in session:
+      if id:
+        return render_template('main_nhankhau.html')   # update for admin
+      else:
+        return render_template('main_nhankhau.html')    # update for user
+  except:
+    pass
+  return redirect('/login')   # if something wrong: redirect to login
 
 
 @app.route('/api/NK/add')
