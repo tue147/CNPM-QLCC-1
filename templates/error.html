@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .error-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #ffdddd;
+        }
+        .error-message {
+            color: #d8000c;
+            margin: 20px 0;
+        }
+        .ok-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .ok-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>Oops!</h1>
+        <p class="error-message">An error occurred. Please try again later.</p>
+        <button class="ok-button" onclick="goToHome()">OK</button>
+    </div>
+
+    <script>
+        function goToHome() {
+            // Redirect to the home page
+            window.location.href = '/login'; // Replace 'index.html' with the path to your home page
+        }
+    </script>
+</body>
+</html>

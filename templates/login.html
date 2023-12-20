@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <form action="/api/login" method="post">
+    <title>Account Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style_login.css') }}">
+</head>
+<body>
+    <div>
+      <p>{{error['error_code']}}</p>
+    </div>
+    <form id="accountForm">
+        <h2>ĐĂNG NHẬP</h2>
+        <label for="username">Tên Đăng Nhập:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Mật Khẩu:</label>
+        <input type="password" id="password" name="password" required><br>
+       <button type="submit">Submit</button>
+    </form>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

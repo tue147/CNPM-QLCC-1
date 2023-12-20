@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Form Submission Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 100px;
+            background-color: #f3f3f3;
+        }
+        .confirmation-container {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            width: 50%;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .confirmation-message {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .button {
+            padding: 10px 15px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="confirmation-container">
+        <h1>Thank You!</h1>
+        <p class="confirmation-message">Your form has been successfully submitted.</p>
+        <button class="button" onclick="goBack()">Go Back to Form</button>
+    </div>
+
+    <script>
+        function goBack() {
+            // Navigate back to the form page
+            window.location.href = "/login";
+        }
+    </script>
+
+</body>
+</html>
