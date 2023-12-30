@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <form action="/ADMIN/{{taikhoan['func']}}/apply" method="post">
+    <title>{{taikhoan['title']}}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style_form_taikhoan.css') }}">
+</head>
+<body>
+    <form id="taikhoan['form_name']">
+        <h2> Account Form</h2>
+        <label for="tenDangNhap">Tên Đăng Nhập:</label>
+        <input type="text" id="tenDangNhap" name="TEN_DANG_NHAP" required><br>
+        <label for="matKhau">Mật Khẩu:</label>
+        <input type="password" id="matKhau" name="MAT_KHAU" required><br>
+        <select for="loaiTaiKhoan", name="ADMIN">
+          <option value="Admin">Admin</option>
+          <option value="User">User</option>
+        </select>
+        <button type="submit">Submit</button>
+    </form>
+    <script src="{{ url_for('static', filename='js/form_taikhoan.js') }}"></script>
+</form>
+</body>
+</html>

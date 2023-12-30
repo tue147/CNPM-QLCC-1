@@ -6,6 +6,7 @@
             <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style_form_nhankhau.css') }}">
         </head>
         <body>
+          <div class="form-container">
             <form id="registrationForm">
                 <h2>{{nhankhau['form_name']}}</h2>
                 <label for="cccd">CCCD:</label>
@@ -25,6 +26,7 @@
                 <input type="text" id="idHo" name="ID_HO"><br>
                 <input type="submit">
             </form>
+          </div>
             <script src="{{ url_for('static', filename='js/form_nhankhau.js') }}"></script>
         </body>
 </form>

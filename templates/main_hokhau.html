@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% include 'main_design/header.html' %}
+
+  <body id="page-top">
+    <!-- Page Wrapper -->
+  {% include 'main_design/page_wrapper.html' %}
+
+  {% include 'main_design/nhankhau_formain.html' %}
+
+  {% include 'main_design/hokhau_formain.html' %}
+
+  {% include 'main_design/thuchi_formain.html' %}
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+
+  </ul>
+  <!-- End of Sidebar -->
+
+  <!-- Content Wrapper -->
+  {% include 'main_design/content_wrapper.html' %}
+
+  <!-- End of Content Wrapper -->
+  {% include 'main_design/dashboard.html' %}
+  <!-- add function -->
+  {% include 'functionality/admin_function.html' %}
+
+
+<!-- Bảng Hộ khẩu -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Hộ khẩu</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-row mb-3">
+                    <!-- Ô dropdown (hộp chọn) -->
+                    <div class="col-md-4">
+                        <select class="form-control" id="householdFilterSelect">
+                            <option value="all">Tất cả</option>
+                            <option value="idHo">ID hộ</option>
+                            <option value="chuHo">Chủ hộ</option>
+                            <option value="idTaiKhoan">ID tài khoản</option>
+                            <option value="soPhong">Số phòng</option>
+                            <option value="loaiPhong">Loại phòng</option>
+                        </select>
+                    </div>
+                    <!-- Ô tìm kiếm -->
+                    <div class="col-md-8">
+                        <input type="text" id="householdSearchInput" class="form-control" placeholder="Nhập để tìm kiếm...">
+                    </div>
+                </div>
+                    <div class="table-responsive">
+                      <table class="table table-bordered" id="householdTable" width="100%" cellspacing="0">
+                          <thead>
+                              <tr>
+                                  <th>ID hộ</th>
+                                  <th>Chủ hộ</th>
+                                  <th>ID tài khoản</th>
+                                  <th>Số phòng</th>
+                                  <th>Loại phòng</th>
+                              </tr>
+                          </thead>
+                          <tbody id="tableBody">
+                              <!-- Data rows will be inserted here -->
+                          </tbody>
+                      </table>
+                    </div>
+      
+                    <script>
+                    // Example data from the database   
+                    var householdData = JSON.parse('{{ user["data"] | tojson | safe }}');
+      
+                    function insertDataToTable(data) {
+                      var tableBody = document.getElementById('tableBody');
+                      data.forEach(function(item) {
+                          var row = `<tr>
+                              <td>${item.ID_HO}</td>
+                              <td>${item.CHU_HO}</td>
+                              <td>${item.ID_TAI_KHOAN}</td>
+                              <td>${item.SO_PHONG}</td>
+                              <td>${item.LOAI_PHONG}</td>
+                          </tr>`;
+                          tableBody.innerHTML += row;
+                      });
+                    }
+      
+                    // Call this function when you've retrieved your data from the database
+                    insertDataToTable(householdData);
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+  <script>
+      document.getElementById("householdSearchInput").addEventListener("keyup", function () {
+          filterHouseholdTable();
+      });
+
+      document.getElementById("householdFilterSelect").addEventListener("change", function () {
+          filterHouseholdTable();
+      });
+
+      function filterHouseholdTable() {
+          var input, filter, table, tr, td, i, txtValue, filterValue;
+          input = document.getElementById("householdSearchInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("householdTable");
+          tr = table.getElementsByTagName("tr");
+          filterValue = document.getElementById("householdFilterSelect").value;
+
+          for (i = 0; i < tr.length; i++) {
+              td = tr[i].getElementsByTagName("td")[getColumnIndex(filterValue)];
+              if (td) {
+                  txtValue = td.textContent || td.innerText;
+
+                  if ((filterValue === "all" || txtValue.toUpperCase().indexOf(filter) > -1)) {
+                      tr[i].style.display = "";
+                  } else {
+                      tr[i].style.display = "none";
+                  }
+              }
+          }
+      }
+
+      function getColumnIndex(filterValue) {
+          switch (filterValue) {
+              case "idHo":
+                  return 0;
+              case "chuHo":
+                  return 1;
+              case "idTaiKhoan":
+                  return 2;
+              case "soPhong":
+                  return 3;
+              case "loaiPhong":
+                  return 4;
+              default:
+                  return 0;
+          }
+      }
+  </script>
+
+</div>

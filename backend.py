@@ -77,7 +77,7 @@ def delete(table_name, conditions):
         command += x"""
   command = "delete from {} {}".format(
       table_name,
-      "where " + ' and '.join([(x[1].replace("%", x[0]))
+      "where " + ' and '.join([(x[1].replace("$", x[0]))
                                for x in conditions]) if conditions else "")
   #print(command)
   cursor.execute(command)
@@ -126,7 +126,7 @@ def show(table_name,
   """
     tim kiem du lieu trong LIST bang table_name
     column_name: cac cot in ra trong bang ket qua
-    conditions: LIST bien dieu kien va dieu kien chon. (thay the ten bien bang %)
+    conditions: LIST bien dieu kien va dieu kien chon. (thay the ten bien bang $)
     ex: (id <= 4) -> bien dk = id, dk = ($ <= 4)
     group_by: gop theo bien nao
     condition_aggressive: tuong tu conditions nhung dung voi aggressive
@@ -168,7 +168,10 @@ def show(table_name,
   cursor.execute(command)
   """for x in cursor:
         print(x)"""
-  return cursor.fetchall()
+  return [
+      dict(zip([x[0] for x in cursor.description], x))
+      for x in cursor.fetchall()
+  ]
 
 
 """

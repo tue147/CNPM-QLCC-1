@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% include 'main_design/header.html' %}
+
+  <body id="page-top">
+    <!-- Page Wrapper -->
+  {% include 'main_design/page_wrapper.html' %}
+
+  {% include 'main_design/nhankhau_formain.html' %}
+
+  {% include 'main_design/hokhau_formain.html' %}
+
+  {% include 'main_design/thuchi_formain.html' %}
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+
+  </ul>
+  <!-- End of Sidebar -->
+
+  <!-- Content Wrapper -->
+  {% include 'main_design/content_wrapper.html' %}
+
+  <!-- End of Content Wrapper -->
+  {% include 'main_design/dashboard.html' %}
+  <!-- add function -->
+  {% include 'functionality/admin_function.html' %}
+
+
+
+<!-- Bảng Thu Chi -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Thu Chi</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-row mb-3">
+                    <!-- Ô dropdown (hộp chọn) -->
+                    <div class="col-md-4">
+                        <select class="form-control" id="incomeExpenseFilterSelect">
+                            <option value="all">Tất cả</option>
+                            <option value="STT">Số thứ tự</option>
+                            <option value="ID_DICH_VU">ID dịch vụ</option>
+                            <option value="ID_HO">ID hộ</option>
+                            <option value="SO_LUONG">Số lượng</option>
+                            <option value="GIA_TIEN">Giá tiền</option>
+                            <option value="DA_THU">Đã thu</option>
+                            <option value="ngay_thu">Ngày thu</option>
+                        </select>
+                    </div>
+                    <!-- Ô tìm kiếm -->
+                    <div class="col-md-8">
+                        <input type="text" id="incomeExpenseSearchInput" class="form-control" placeholder="Nhập để tìm kiếm...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="incomeExpenseTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Số thứ tự</th>
+                                <th>ID dịch vụ</th>
+                                <th>ID hộ</th>
+                                <th>Số lượng</th>
+                                <th>Giá tiền</th>
+                                <th>Đã thu</th>
+                                <th>Ngày thu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                          
+                        </tbody>
+                    </table>
+                </div>
+                <script>
+                  // Example data from the database   
+                  var expenseData = JSON.parse('{{ user["data"] | tojson | safe }}');
+
+                  function insertDataToTable(data) {
+                    var tableBody = document.getElementById('tableBody');
+                    data.forEach(function(item) {
+                        var row = `<tr>
+                            <td>${item.STT}</td>
+                            <td>${item.ID_DICH_VU}</td>
+                            <td>${item.ID_HO}</td>
+                            <td>${item.SO_LUONG}</td>
+                            <td>${item.GIA_TIEN}</td>
+                            <td>${item.DA_THU}</td>
+                            <td>${item.ngay_thu}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                  }
+
+                  // Call this function when you've retrieved your data from the database
+                  insertDataToTable(expenseData);
+                  </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm script JavaScript để thực hiện chức năng tìm kiếm và lọc -->
+<script>
+    document.getElementById("incomeExpenseSearchInput").addEventListener("keyup", function () {
+        filterIncomeExpenseTable();
+    });
+
+    document.getElementById("incomeExpenseFilterSelect").addEventListener("change", function () {
+        filterIncomeExpenseTable();
+    });
+
+    function filterIncomeExpenseTable() {
+        var input, filter, table, tr, td, i, txtValue, filterValue;
+        input = document.getElementById("incomeExpenseSearchInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("incomeExpenseTable");
+        tr = table.getElementsByTagName("tr");
+        filterValue = document.getElementById("incomeExpenseFilterSelect").value;
+
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[getColumnIndex(filterValue)];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+
+                if ((filterValue === "all" || txtValue.toUpperCase().indexOf(filter) > -1)) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function getColumnIndex(filterValue) {
+        switch (filterValue) {
+            case "STT":
+                return 0;
+            case "ID_DICH_VU":
+                return 1;
+            case "ID_HO":
+                return 2;
+            case "SO_LUONG":
+                return 3;
+            case "GIA_TIEN":
+                return 4;
+            case "DA_THU":
+                return 5;
+            case "ngay_thu":
+                return 6;
+            default:
+                return 0;
+        }
+    }
+</script>
