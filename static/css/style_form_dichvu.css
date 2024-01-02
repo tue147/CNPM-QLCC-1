@@ -1,0 +1,44 @@
+/* File: style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+form {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 400px;
+}
+label, input, select, button {
+    width: 95%;
+    margin-bottom: 15px;
+}
+label {
+    font-weight: bold;
+}
+input, select, button {
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+button {
+    background-color: #007bff;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+button:hover {
+    background-color: #0056b3;
+}
+.form-container {
+    max-height: 80vh; /* Adjust based on your needs */
+    overflow-y: auto; /* Adds scrolling */
+    padding: 20px;
+}

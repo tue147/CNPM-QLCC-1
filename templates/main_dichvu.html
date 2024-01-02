@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% include 'main_design/header.html' %}
+
+  <body id="page-top">
+    <!-- Page Wrapper -->
+  {% include 'main_design/page_wrapper.html' %}
+
+  {% include 'main_design/nhankhau_formain.html' %}
+
+  {% include 'main_design/hokhau_formain.html' %}
+
+  {% include 'main_design/thuchi_formain.html' %}
+
+  {% include 'main_design/dichvu_formain.html' %}
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider">
+
+  </ul>
+  <!-- End of Sidebar -->
+
+  <!-- Content Wrapper -->
+  {% include 'main_design/content_wrapper.html' %}
+
+  <!-- End of Content Wrapper -->
+  {% include 'main_design/dashboard.html' %}
+  <!-- add function -->
+  {% include 'functionality/admin_function.html' %}
+
+
+<!-- Bảng Hộ khẩu -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Hộ khẩu</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-row mb-3">
+                    <!-- Ô dropdown (hộp chọn) -->
+                    <div class="col-md-4">
+                        <select class="form-control" id="serviceFilterSelect">
+                            <option value="all">Tất cả</option>
+                            <option value="stt">STT</option>
+                            <option value="idDichVu">ID Dịch Vụ</option>
+                            <option value="tenDichVu">Tên Dịch Vụ</option>
+                            <option value="donGia">Đơn Giá</option>
+                            <option value="batBuoc">Bắt Buộc</option>
+                            <option value="ngaySuaDoi">Ngày Sửa Đổi</option>
+                            <option value="loaiSuaDoi">Loại Sửa Đổi</option>
+                        </select>
+                    </div>
+                    <!-- Ô tìm kiếm -->
+                    <div class="col-md-8">
+                        <input type="text" id="serviceSearchInput" class="form-control" placeholder="Nhập để tìm kiếm...">
+                    </div>
+                </div>
+                    <div class="table-responsive">
+                      <table class="table table-bordered" id="serviceTable" width="100%" cellspacing="0">
+                          <thead>
+                              <tr>
+                                  <th>STT</th>
+                                  <th>ID Dịch Vụ</th>
+                                  <th>Tên Dịch Vụ</th>
+                                  <th>Đơn Giá</th>
+                                  <th>Bắt Buộc</th>
+                                  <th>Ngày Sửa Đổi</th>
+                                  <th>Loại Sửa Đổi</th>
+                              </tr>
+                          </thead>
+                          <tbody id="tableBody">
+                              <!-- Data rows will be inserted here -->
+                          </tbody>
+                      </table>
+                    </div>
+
+                    <script>
+                    // Example data from the database   
+                    var serviceData = JSON.parse('{{ user["data"] | tojson | safe }}');
+
+                    function insertDataToTable(data) {
+                      var tableBody = document.getElementById('tableBody');
+                      data.forEach(function(item) {
+                          var row = `<tr>
+                              <td>${item.stt}</td>
+                              <td>${item.ID_DICH_VU}</td>
+                              <td>${item.TEN_DICH_VU}</td>
+                              <td>${item.don_gia}</td>
+                              <td>${item.BAT_BUOC}</td>
+                              <td>${item.NGAY_SUA_DOI}</td>
+                              <td>${item.LOAI_SUA_DOI}</td>
+                          </tr>`;
+                          tableBody.innerHTML += row;
+                      });
+                    }
+
+                    // Call this function when you've retrieved your data from the database
+                    insertDataToTable(serviceData);
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+  <script>
+      document.getElementById("serviceSearchInput").addEventListener("keyup", function () {
+          filterServiceTable();
+      });
+
+      document.getElementById("serviceSearchInput").addEventListener("change", function () {
+          filterServiceTable();
+      });
+
+      function filterServiceTable() {
+          var input, filter, table, tr, td, i, txtValue, filterValue;
+          input = document.getElementById("serviceSearchInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("serviceTable");
+          tr = table.getElementsByTagName("tr");
+          filterValue = document.getElementById("serviceFilterSelect").value;
+
+          for (i = 0; i < tr.length; i++) {
+              td = tr[i].getElementsByTagName("td")[getColumnIndex(filterValue)];
+              if (td) {
+                  txtValue = td.textContent || td.innerText;
+
+                  if ((filterValue === "all" || txtValue.toUpperCase().indexOf(filter) > -1)) {
+                      tr[i].style.display = "";
+                  } else {
+                      tr[i].style.display = "none";
+                  }
+              }
+          }
+      }
+
+      function getColumnIndex(filterValue) {
+          switch (filterValue) {
+              case "stt":
+                  return 0;
+              case "idDichVu":
+                  return 1;
+              case "tenDichVu":
+                  return 2;
+              case "donGia":
+                  return 3;
+              case "batBuoc":
+                  return 4;
+              case "ngaySuaDoi":
+                  return 5;
+              case "loaiSuaDoi":
+                  return 6;
+              default:
+                  return 0;
+          }
+      }
+  </script>
+
+</div>

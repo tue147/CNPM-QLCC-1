@@ -9,7 +9,7 @@
         <form id="{{hokhau['form_name']}}">
             <h2>Household Form</h2>
             <label for="idHo">ID Hộ:</label>
-            <input type="number" id="idHo" name="ID_HO" required><br>
+            <input type="number" id="idHo" name="ID_HO" required onchange="updateFormID_HO()"><br>
             <label for="chuHo">Chủ Hộ:</label>
             <input type="text" id="chuHo" name="CHU_HO" required><br>
             <label for="idTaiKhoan">ID Tài Khoản:</label>
@@ -24,6 +24,35 @@
             <button type="submit">Submit</button>
         </form>
         <script src="{{ url_for('static', filename='js/form_hokhau.js') }}"></script>
+      <script>
+        function updateFormID_HO() {
+          if ("{{hokhau['func']}}"=='update'){
+            var idHo = document.getElementById('idHo').value;
+            fetch(`/api/getFormID_HO?idHo=${idHo}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('ID Hộ không tồn tại!');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('chuHo').value = data.chuHo;
+                    document.getElementById('idTaiKhoan').value = data.idTaiKhoan;
+                    document.getElementById('soPhong').value = data.soPhong;
+                    document.getElementById('loaiPhong').value = data.loaiPhong;
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  alert(error.message);
+                  document.getElementById('chuHo').value = ''; 
+                  document.getElementById('idTaiKhoan').value = '';
+                  document.getElementById('soPhong').value = '';
+                  document.getElementById('loaiPhong').value = '';
+                });
+              }
+        }
+
+      </script>
     </form>
 </body>
 </html>

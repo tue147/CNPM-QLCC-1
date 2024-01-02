@@ -10,15 +10,15 @@
     <form id="{{thuchi['form_name']}}">
         <h2>Thu chi</h2>
         <label for="stt">STT:</label>
-        <input type="text" id="stt" name="STT" required><br>
+        <input type="text" id="stt" name="STT" required onchange="updateFormSTT()"><br>
         <label for="idDichVu">ID dịch vụ:</label>
         <input type="text" id="idDichVu" name="ID_DICH_VU" required onchange="updatePrice()"><br>
         <label for="tenDichVu">Tên dịch vụ:</label>
         <input type="text" id="tenDichVu" name="TEN_DICH_VU" readonly><br>
         <label for="idHo">ID hộ:</label>
-        <input type="text" id="idHo" name="ID_HO"><br>
+        <input type="text" id="idHo" name="ID_HO" required onchange="updatePrice()"><br>
         <label for="soLuong">Số lượng:</label>
-        <input type="number" id="soLuong" name="SO_LUONG" min="0" step="1"><br>
+        <input type="number" id="soLuong" name="SO_LUONG" min="0" step="1" required onchange="updatePrice()"><br>
         <label for="giaTien">Giá tiền:</label>
         <input type="number" id="giaTien" name="GIA_TIEN" min="0" step="1000" readonly><br>
         <label for="daThu">Đã thu:</label>
@@ -33,16 +33,54 @@
   <script>
     function updatePrice() {
         var idDichVu = document.getElementById('idDichVu').value;
-        fetch(`/api/getPrice?idDichVu=${idDichVu}`)
+        var idHo = document.getElementById('idHo').value;
+        var soLuong = document.getElementById('soLuong').value;
+        if(idDichVu && idHo && soLuong) {
+          fetch(`/api/getPrice?idDichVu=${idDichVu}&idHo=${idHo}&soLuong=${soLuong}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Dịch vụ hoặc hộ gia đình không tồn tại!');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  document.getElementById('giaTien').value = data.price * soLuong; // Update the price
+                document.getElementById('tenDichVu').value = data.name; // Update the name
+                if ("{{thuchi['func']}}"=='add'){
+                  document.getElementById('stt').value = data.stt; // Update the index
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+                document.getElementById('giaTien').value = '';
+                document.getElementById('idDichVu').value = '';
+                document.getElementById('tenDichVu').value = '';
+                document.getElementById('idHo').value = '';
+                document.getElementById('stt').value = '';
+              });
+          }
+    }
+
+    function updateFormSTT() {
+      if ("{{thuchi['func']}}"=='update'){
+        var stt = document.getElementById('stt').value;
+        fetch(`/api/getFormSTT?stt=${stt}`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Dịch vụ không tồn tại!');
+                    throw new Error('STT không tồn tại!');
                 }
                 return response.json();
             })
             .then(data => {
-                document.getElementById('giaTien').value = data.price; // Update the price
-              document.getElementById('tenDichVu').value = data.name; // Update the name
+                
+                document.getElementById('giaTien').value = data.giaTien; // Update the price
+                document.getElementById('idDichVu').value = data.idDichVu;
+                document.getElementById('idHo').value = data.idHo;
+                document.getElementById('soLuong').value = data.soLuong;
+                // document.getElementById('ngayThu').value = data.ngay_thu;   // don't need ngay thu
+                document.getElementById('daThu').value = data.daThu;
+              document.getElementById('tenDichVu').value = data.tenDichVu;
             })
             .catch(error => {
               console.error('Error:', error);
@@ -50,7 +88,10 @@
               document.getElementById('giaTien').value = '';
               document.getElementById('idDichVu').value = '';
               document.getElementById('tenDichVu').value = '';
+              document.getElementById('idHo').value = '';
+              document.getElementById('stt').value = '';
             });
+          }
     }
   </script>
 </body>

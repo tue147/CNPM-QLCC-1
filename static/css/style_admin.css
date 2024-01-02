@@ -1032,8 +1032,8 @@ pre code {
     max-width: 50%;
   }
   .col-md-7 {
-    flex: 0 0 58.33333%;
-    max-width: 58.33333%;
+    flex: 0 0 57.33333%;
+    max-width: 57.33333%;
   }
   .col-md-8 {
     flex: 0 0 66.66667%;
@@ -2530,19 +2530,19 @@ fieldset:disabled a.btn {
 
 .btn-danger {
   color: #fff;
-  background-color: #e74a3b;
-  border-color: #e74a3b;
+  background-color: #4348ea;
+  border-color: #e8e8e8;
 }
 
 .btn-danger:hover {
   color: #fff;
-  background-color: #e02d1b;
-  border-color: #d52a1a;
+  background-color: #4348ea;
+  border-color: #e8e8e8;
 }
 
 .btn-danger:focus, .btn-danger.focus {
   color: #fff;
-  background-color: #e02d1b;
+  background-color: #4348ea;
   border-color: #d52a1a;
   box-shadow: 0 0 0 0.2rem rgba(235, 101, 88, 0.5);
 }

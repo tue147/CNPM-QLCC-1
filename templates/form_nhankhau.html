@@ -10,7 +10,7 @@
             <form id="registrationForm">
                 <h2>{{nhankhau['form_name']}}</h2>
                 <label for="cccd">CCCD:</label>
-                <input type="text" id="cccd" name="CCCD" required><br>
+                <input type="text" id="cccd" name="CCCD" required onchange="updateFormCCCD()"><br>
                 <label for="hoTen">Họ và Tên:</label>
                 <input type="text" id="hoTen" name="HO_TEN" required><br>
                 <label for="ngaySinh">Ngày Sinh:</label>
@@ -28,6 +28,37 @@
             </form>
           </div>
             <script src="{{ url_for('static', filename='js/form_nhankhau.js') }}"></script>
+          <script>
+            function updateFormCCCD() {
+              if ("{{nhankhau['func']}}"=='update'){
+                var cccd = document.getElementById('cccd').value;
+                fetch(`/api/getFormCCCD?cccd=${cccd}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('CCCD không tồn tại!');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('hoTen').value = data.hoTen;
+                        document.getElementById('ngaySinh').value = data.ngaySinh;
+                        document.getElementById('quanHe').value = data.quanHe;
+                        document.getElementById('tinhTrangCuTru').value = data.tinhTrangCuTru;
+                        document.getElementById('idHo').value = data.idHo;
+                    })
+                    .catch(error => {
+                      console.error('Error:', error);
+                      alert(error.message);
+                      document.getElementById('hoTen').value = ''; 
+                      document.getElementById('ngaySinh').value = '';
+                      document.getElementById('quanHe').value = '';
+                      document.getElementById('tinhTrangCuTru').value = '';
+                      document.getElementById('idHo').value = '';
+                    });
+                  }
+            }
+
+          </script>
         </body>
 </form>
 </html>

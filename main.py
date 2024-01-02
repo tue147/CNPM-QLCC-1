@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from backend import *
 import random
+import json
+import datetime
 
 app = Flask(__name__,
             static_url_path='',
@@ -22,6 +24,7 @@ def login():
   except:
     pass
   return render_template('login.html', error={'error_code': ""})
+
 
 @app.route('/logout')
 def logout():
@@ -268,7 +271,11 @@ def HK_apply(func):
         for item in values
     ]
     print((values))
-    # values.append('test')
+    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
+                     [('ID_TAI_KHOAN', f'$ = {values[2]}')])
+    print(find_idtk)
+    if len(find_idtk) != 1:
+      return render_template('error.html')
     try:
       create('ho_gd', [tuple(values)])
     except:
@@ -286,7 +293,9 @@ def HK_apply(func):
     else:
       data['LOAI_PHONG'] = 1
     find_hogd = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {id}')])
-    if len(find_hogd) == 1:
+    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
+                     [('ID_TAI_KHOAN', f'$ = {data["ID_TAI_KHOAN"]}')])
+    if len(find_hogd) == 1 and len(find_idtk) == 1:
       modify('ho_gd',
              position=data.keys(),
              value=data.values(),
@@ -310,6 +319,28 @@ def HK_apply(func):
 
   else:
     return render_template("error.html")
+
+
+@app.route('/api/getFormID_HO')
+def get_form_idHo():
+  idHo = request.args.get('idHo')
+  data = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {idHo}')])
+  print(data)
+  if len(data) == 1:
+    if data[0]['LOAI_PHONG'] == 0:
+      data[0]['LOAI_PHONG'] = 'standard'
+    else:
+      data[0]['LOAI_PHONG'] = 'deluxe'
+    return jsonify(
+        chuHo=data[0]['CHU_HO'],
+        idTaiKhoan=data[0]['ID_TAI_KHOAN'],
+        soPhong=data[0]['SO_PHONG'],
+        loaiPhong=data[0]['LOAI_PHONG'],
+    )
+  else:
+    response = jsonify({"error": "ID Hộ không tồn tại!"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
 
 
 '''
@@ -392,6 +423,10 @@ def NK_apply(func):
     values = [
         1 if item == 'Yes' else 0 if item == 'No' else item for item in values
     ]
+    id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {values[-1]}')])
+    print(id_ho)
+    if len(id_ho) != 1:
+      return render_template('error.html')
     #   values.append('test')
     try:
       create('nhan_khau', [tuple(values)])
@@ -405,8 +440,13 @@ def NK_apply(func):
     print(data)
     id = data.get('CCCD')
     data = {k: v for k, v in data.items() if k != 'CCCD'}
+    if data['TINH_TRANG_CU_TRU'] == 'Yes':
+      data['TINH_TRANG_CU_TRU'] = 1
+    else:
+      data['TINH_TRANG_CU_TRU'] = 0
     find_cccd = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
-    if len(find_cccd) == 1:
+    id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {data["ID_HO"]}')])
+    if len(find_cccd) == 1 and len(id_ho) == 1:
       modify('nhan_khau',
              position=data.keys(),
              value=data.values(),
@@ -427,8 +467,32 @@ def NK_apply(func):
       return render_template('submit_confirmation.html')
     else:
       return render_template("error.html")
+
   else:
     return render_template("error.html")
+
+
+@app.route('/api/getFormCCCD')
+def get_form_CCCD():
+  cccd = request.args.get('cccd')
+  data = show(['nhan_khau'], ['*'], [('CCCD', f'$ = {cccd}')])
+  print(data)
+  if len(data) == 1:
+    if data[0]['TINH_TRANG_CU_TRU'] == 0:
+      data[0]['TINH_TRANG_CU_TRU'] = 'No'
+    else:
+      data[0]['TINH_TRANG_CU_TRU'] = 'Yes'
+    data[0]['NGAY_SINH'] = data[0]['NGAY_SINH'].isoformat()
+    print(data)
+    return jsonify(hoTen=data[0]['HO_TEN'],
+                   ngaySinh=data[0]['NGAY_SINH'],
+                   quanHe=data[0]['QUAN_HE'],
+                   tinhTrangCuTru=data[0]['TINH_TRANG_CU_TRU'],
+                   idHo=data[0]['ID_HO'])
+  else:
+    response = jsonify({"error": "ID Hộ không tồn tại!"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
 
 
 '''
@@ -503,7 +567,7 @@ def TC_apply(func):
     data = request.form
     print(data)
     values = [data.get(key) for key in data]
-    values.remove(values[2])   # remove name of fee
+    values.remove(values[2])  # remove name of fee
     #   values.append('test')
     print(values)
     try:
@@ -517,7 +581,10 @@ def TC_apply(func):
     data = request.form
     print(data)
     id = data.get('STT')
-    data = {k: v for k, v in data.items() if (k != 'STT' and k!='TEN_DICH_VU')}
+    data = {
+        k: v
+        for k, v in data.items() if (k != 'STT' and k != 'TEN_DICH_VU')
+    }
     print(data)
     find_stt = show(['thu_chi'], ['*'], [('stt', f'$ = {id}')])
     if len(find_stt) == 1:
@@ -549,15 +616,224 @@ def TC_apply(func):
 @app.route('/api/getPrice')
 def get_price():
   id_dich_vu = request.args.get('idDichVu')
+  id_ho = request.args.get('idHo')
   print(id_dich_vu)
-  data = show(['dich_vu'], ['don_gia', 'ten_dich_vu'], [('ID_DICH_VU', f'$ = {id_dich_vu}')])
+  # data = show(['dich_vu', 'thu_chi'], ['don_gia', 'ten_dich_vu'],
+  #             [('ID_DICH_VU', f'$ = {id_dich_vu}')],
+  #             special_column_name=[(['so_luong',
+  #                                    'gia_tien'], "{} * {}", "total")])
+  data = show(['dich_vu'], ['don_gia', 'ten_dich_vu'],
+              [('ID_DICH_VU', f'$ = {id_dich_vu}')])
+  max_stt = show(table_name=["thu_chi"],
+                 special_column_name=[(['stt'], "max({})", "max_stt")],
+                 column_name=[None])
+  check_id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {id_ho}')])
   print(data)
-  if len(data) == 1:
-    return jsonify(price=data[0]['don_gia'], name = data[0]['ten_dich_vu'])
+  print(max_stt)
+  if len(data) == 1 and len(check_id_ho) == 1:
+    # return jsonify(price=data[0]['total'], name=data[0]['ten_dich_vu'])
+    return jsonify(price=data[0]['don_gia'],
+                   name=data[0]['ten_dich_vu'],
+                   stt=max_stt[0]['max_stt'] + 1)
   else:
-    response = jsonify({"error": "Dịch vụ không tồn tại!"})
+    response = jsonify({"error": "Dịch vụ hoặc Hộ gia đình không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
     return response
+
+
+@app.route('/api/getFormSTT')
+def get_form_stt():
+  stt = request.args.get('stt')
+  data = show(['thu_chi'], ['*'], [('stt', f'$ = {stt}')])
+  print(data)
+  if len(data) == 1:
+    ten_dich_vu = show(['dich_vu'], ['ten_dich_vu'],
+                       [('ID_DICH_VU', f'$ = {data[0]["ID_DICH_VU"]}')])
+    print(ten_dich_vu)
+    return jsonify(giaTien=data[0]['GIA_TIEN'],
+                   tenDichVu=ten_dich_vu[0]['ten_dich_vu'],
+                   idDichVu=data[0]['ID_DICH_VU'],
+                   idHo=data[0]['ID_HO'],
+                   soLuong=data[0]['SO_LUONG'],
+                   daThu=data[0]['DA_THU'])
+  else:
+    response = jsonify({"error": "STT không tồn tại!"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
+
+
+'''
+Dich Vu
+'''
+
+
+@app.route('/api/DV')
+def DV():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_dv = show(['lich_su_dich_vu'], ['*'])
+        print(data_dv)
+        return render_template('main_dichvu.html',
+                               user={
+                                   'user': 'admin',
+                                   'USER': 'DV',
+                                   'data': data_dv
+                               })  # update for admin
+      else:
+        data_dv = show(['lich_su_dich_vu'], ['*'],
+                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+        return render_template('main_dichvu.html',
+                               user={
+                                   'user': 'user',
+                                   'USER': 'DV',
+                                   'data': data_dv
+                               })  # update for user
+  except:
+    pass
+  return redirect('/login')  # if something wrong: redirect to login
+
+
+@app.route('/api/DV/add')
+def DV_add():
+  stt = show(['lich_su_dich_vu'], 
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
+  id_dich_vu = show(['dich_vu'], 
+                    special_column_name=[(['ID_DICH_VU'], "max({})", "max_iddv")],
+                    column_name=[None])
+  print(id_dich_vu)
+  return render_template('form_dichvu.html',
+                         dichvu={
+                             'title': 'Thêm Dịch Vụ',
+                             'func': 'add',
+                             'form_name': 'Service Form',
+                             'stt': stt[0]['max_stt'] + 1,
+                             'idDichVu': id_dich_vu[0]['max_iddv'] + 1,
+                         })
+
+
+@app.route('/api/DV/update')
+def DV_update():
+  stt = show(['lich_su_dich_vu'], 
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
+  return render_template('form_dichvu.html',
+                         dichvu={
+                             'title': 'Thay đổi Dịch Vụ',
+                             'func': 'update',
+                             'form_name': 'Service Form',
+                             'stt': stt[0]['max_stt'] + 1,
+                         })
+
+
+@app.route('/api/DV/delete')
+def DV_delete():
+  return render_template('form_delete.html',
+                         format={
+                             'title': 'Xóa Dịch Vụ',
+                             'class': 'api/DV',
+                             'name': 'ID_DICH_VU',
+                             'label': 'ID_DICH_VU'
+                         })
+
+
+@app.route('/api/DV/<func>/apply', methods=['post'])
+def DV_apply(func):
+  data = request.form
+
+  if func == "add":
+    # insert nhan khau
+    data = request.form
+    print(data)
+    values = [data.get(key) for key in data]
+    values = [
+        0 if item == 'tuNguyen' else 1 if item == 'batBuoc' else item
+        for item in values
+    ]
+    values.append("Add")
+    values_without_history = values.copy()
+    values_without_history.pop()  # remove type
+    values_without_history.pop()  # remove date
+    values_without_history.remove(values_without_history[0])  # remove stt
+    #   values.append('test')
+    print(values)
+    print(values_without_history)
+    try:
+      create('dich_vu', [tuple(values_without_history)])
+      create('lich_su_dich_vu', [tuple(values)])
+    except:
+      return render_template('error.html')
+    # commit()
+    return render_template('submit_confirmation.html', form=values)
+
+  elif func == "update":
+    data = request.form
+    id = data.get('ID_DICH_VU')
+    data = {k: v for k, v in data.items()}
+    data["LOAI_SUA_DOI"] = "Update"
+    if data['BAT_BUOC'] == 'batBuoc':
+      data['BAT_BUOC'] = 1
+    else:
+      data['BAT_BUOC'] = 0
+    data_without_history = data.copy()
+    del data_without_history['NGAY_SUA_DOI']
+    del data_without_history['LOAI_SUA_DOI']
+    del data_without_history['stt']
+    del data_without_history['ID_DICH_VU']
+    values = [data.get(key) for key in data]
+    print(data)
+    print(data_without_history)
+    find_dich_vu = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
+    try:
+      if len(find_dich_vu) == 1:
+        modify('dich_vu',
+               position=data_without_history.keys(),
+               value=data_without_history.values(),
+               index=id,
+               primary_key="ID_DICH_VU")
+        create('lich_su_dich_vu', [tuple(values)])
+        # commit()
+        return render_template('submit_confirmation.html')
+      else:
+        return render_template('error.html')
+    except:
+      return render_template('error.html')
+
+  elif func == "delete":
+    id = data.get('ID_DICH_VU')
+    print(id)
+    find_service = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
+    if len(find_account) == 1:
+      stt = show(['lich_su_dich_vu'], 
+           special_column_name=[(['stt'], "max({})", "max_stt")],
+           column_name=[None])
+      delete('dich_vu', conditions=[(id, "STT = $")])
+      values = [stt[0]['max_stt'] + 1, find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
+                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], 
+               ]
+      create('lich_su_dich_vu', [tuple(values)])
+      # commit()
+      return render_template('submit_confirmation.html')
+    else:
+      return render_template("error.html")
+
+  else:
+    return render_template("error.html")
+
+
+# test
+@app.route("/api/NK/enhanced_mode", methods=["POST", "GET"])
+def execute_change():
+  data = json.loads(request.data)
+  print(data)
+  for x in data['delete']:
+    delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
+  for x in data['modify']:
+    modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
+  return "Xu li thanh cong"
 
 
 if __name__ == '__main__':

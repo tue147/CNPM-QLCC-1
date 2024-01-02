@@ -33,12 +33,15 @@ def commit():
   mydb.commit()
 
 
-def create(table_name, value):
+def create(table_name, value, position=None):
   # Tao record moi trong bang table_name (co the nhieu record)
   # value la LIST cac record
+  # position la cac cot co gia tri them vao hoac None neu them het cac cot
   # chua commit data
-  command = "insert into {} values ({})".format(
-      table_name, ("%s," * len(col_info[table_name]))[:-1])
+  command = "insert into {} {} values ({})".format(
+      table_name, f"({','.join(position)})" if position else "",
+      ("%s," * len(position if position else col_info[table_name]))[:-1])
+  #print(command)
   if (len(value) == 0):
     return
   cursor.executemany(command, value)
@@ -128,6 +131,8 @@ def show(table_name,
     column_name: cac cot in ra trong bang ket qua
     conditions: LIST bien dieu kien va dieu kien chon. (thay the ten bien bang $)
     ex: (id <= 4) -> bien dk = id, dk = ($ <= 4)
+    special_column_name: LIST cac ten dac biet (cac ham tinh toan)
+    ex: a * b voi ten c la ten cot ket qua -> special_column_name = ["a", "b"], "{} * {}", "c"
     group_by: gop theo bien nao
     condition_aggressive: tuong tu conditions nhung dung voi aggressive
     sort_by: sap xep theo bien nao
@@ -146,7 +151,8 @@ def show(table_name,
         return prefix[x]
     assert (False)
 
-  full_column_name = [find(x) for x in column_name] if column_name else ["*"]
+  full_column_name = [find(x) for x in column_name
+                      if x] if column_name else ["*"]
   #full_column_name = [f"allin.{x}" for x in column_name]
   """print(f"top {limit}" if limit else "fail")
     print(','.join(full_column_name))
@@ -154,8 +160,12 @@ def show(table_name,
     print(','.join(conditions))
     print(f"order by {sort_by}" if sort_by else "fail")"""
   command = "select {} from ({}) {} {} {} {} {}"
+  all_table = join_all(table_name)
   command = command.format(
-      ','.join(full_column_name), join_all(table_name), "where " +
+      ','.join(full_column_name + ([
+          x[1].format(*(find(y) for y in x[0])) + f" as {x[2]}" if x[2] else ""
+          for x in special_column_name
+      ] if special_column_name else [])), all_table, "where " +
       ' and '.join([x[1].replace("$", find(x[0]))
                     for x in conditions]) if conditions else "",
       f"group by {find(group_by)}" if group_by else "",
