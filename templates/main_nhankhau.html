@@ -1,36 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include 'main_design/header.html' %}
-
-  <body id="page-top">
-    <!-- Page Wrapper -->
-  {% include 'main_design/page_wrapper.html' %}
-
-  {% include 'main_design/nhankhau_formain.html' %}
-
-  {% include 'main_design/hokhau_formain.html' %}
-
-  {% include 'main_design/thuchi_formain.html' %}
-
-  {% include 'main_design/dichvu_formain.html' %}
-
-
-  <!-- Divider -->
-  <hr class="sidebar-divider">
-
-  </ul>
-  <!-- End of Sidebar -->
-
-  <!-- Content Wrapper -->
-  {% include 'main_design/content_wrapper.html' %}
-
-  <!-- End of Content Wrapper -->
-  {% include 'main_design/dashboard.html' %}
-  <!-- add function -->
-  {% include 'functionality/admin_function.html' %}
-
-
+  {% include 'main_design/admin_design.html' %}
+  
 
 <!-- Bảng Nhân khẩu -->
 <div class="row">
@@ -132,8 +104,8 @@
         for (i = 0; i < tr.length; i++) {
             td = tr[i].getElementsByTagName("td")[getColumnIndex(filterValue)]; // Chỉ tìm kiếm trong cột được chọn
             if (td) {
-                txtValue = td.textContent || td.innerText;
-
+                if (td.querySelector("input")) txtValue = td.querySelector("input").value;
+                else txtValue = td.textContent || td.innerText;
                 // Kiểm tra điều kiện tìm kiếm
                 if ((filterValue === "all" || txtValue.toUpperCase().indexOf(filter) > -1)) {
                     tr[i].style.display = "";
@@ -267,6 +239,12 @@
     }
     const list_type = ["", "", "date", "", "", ""];
     const notWriteable = 1;
+    const validate_function = [null,
+                              null,
+                              null,
+                              null,
+                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;},
+                              null];
     function changeMode() {
       counter ^= 1;
       console.log(counter);
@@ -281,13 +259,24 @@
         $("#dataTableBody tr").each((i, item) => {
           $(item).find("td").each((idx, items) => {
             items.innerHTML = `<input type="${list_type[idx]}" value = "${items.innerHTML}" data-default="${items.innerHTML}" ${(notWriteable >> idx & 1) === 1 ? "disabled" : ""}>`;
+            if (!(validate_function[idx] === null)) {
+              console.log(items.querySelector("input"));
+              items.querySelector("input").addEventListener("blur", function() {
+                if (!validate_function[idx](this.value)) {
+                  this.style.borderColor = "#e74a3b";
+                }
+              });
+            }
           });
         });
         let headers = document.querySelector('#dataTable thead').getElementsByTagName('tr')[0];
-        headers.innerHTML += `<th><input type="checkbox" id="checkDel"></th>`;
+        //headers.innerHTML += `<th><input type="checkbox" id="checkDel"></th>`;
+        $(headers).append(`<th><input type="checkbox" id="checkDel"></th>`);
         container.querySelectorAll("tr").forEach((item, id) => {
-          item.innerHTML += `<td><input type = "checkbox" id="checkDel${id}"></td>
-                            <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`;
+          /*item.innerHTML += `<td><input type = "checkbox" id="checkDel${id}"></td>
+                            <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`;*/
+          $(item).append(`<td><input type = "checkbox" id="checkDel${id}"></td>
+                        <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`);
           item.querySelector("button").addEventListener("click", function () {
             for (let x of item.querySelectorAll('td input')) {
               if (x.type === "checkbox") x.checked = false;
@@ -297,7 +286,8 @@
         });
         document.getElementById("checkDel").addEventListener("change", checkAllBox);
         $("#search-box div").last().removeClass("col-md-8").addClass("col-md-7");
-        $("#search-box").html((i, inner) => {return  inner + `<div class="col-md-1"><button type="submit" class="btn btn-danger">Submit</button></div>`;});
+        //$("#search-box").html((i, inner) => {return  inner + `<div class="col-md-1"><button type="submit" class="btn btn-danger">Submit</button></div>`;});
+        $("#search-box").append(`<div class="col-md-1"><button type="submit" class="btn btn-danger">Submit</button></div>`);
         $("#search-box").find("button").eq(0).click(function() {
           console.log(extract_data());
         });

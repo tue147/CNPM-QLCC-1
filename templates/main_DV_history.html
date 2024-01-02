@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include 'main_design/admin_design.html' %}
+  {% include 'main_design/history_design.html' %}
 
 <!-- Bảng Hộ khẩu -->
 <div class="row">
@@ -16,10 +16,13 @@
                     <div class="col-md-4">
                         <select class="form-control" id="serviceFilterSelect">
                             <option value="all">Tất cả</option>
+                            <option value="stt">STT</option>
                             <option value="idDichVu">ID Dịch Vụ</option>
                             <option value="tenDichVu">Tên Dịch Vụ</option>
                             <option value="donGia">Đơn Giá</option>
                             <option value="batBuoc">Bắt Buộc</option>
+                            <option value="ngaySuaDoi">Ngày Sửa Đổi</option>
+                            <option value="loaiSuaDoi">Loại Sửa Đổi</option>
                         </select>
                     </div>
                     <!-- Ô tìm kiếm -->
@@ -31,10 +34,13 @@
                       <table class="table table-bordered" id="serviceTable" width="100%" cellspacing="0">
                           <thead>
                               <tr>
+                                  <th>STT</th>
                                   <th>ID Dịch Vụ</th>
                                   <th>Tên Dịch Vụ</th>
                                   <th>Đơn Giá</th>
                                   <th>Bắt Buộc</th>
+                                  <th>Ngày Sửa Đổi</th>
+                                  <th>Loại Sửa Đổi</th>
                               </tr>
                           </thead>
                           <tbody id="tableBody">
@@ -51,10 +57,13 @@
                       var tableBody = document.getElementById('tableBody');
                       data.forEach(function(item) {
                           var row = `<tr>
+                              <td>${item.stt}</td>
                               <td>${item.ID_DICH_VU}</td>
                               <td>${item.TEN_DICH_VU}</td>
                               <td>${item.don_gia}</td>
                               <td>${item.BAT_BUOC}</td>
+                              <td>${item.NGAY_SUA_DOI}</td>
+                              <td>${item.LOAI_SUA_DOI}</td>
                           </tr>`;
                           tableBody.innerHTML += row;
                       });
@@ -100,14 +109,20 @@
 
       function getColumnIndex(filterValue) {
           switch (filterValue) {
-              case "idDichVu":
+              case "stt":
                   return 0;
-              case "tenDichVu":
+              case "idDichVu":
                   return 1;
-              case "donGia":
+              case "tenDichVu":
                   return 2;
-              case "batBuoc":
+              case "donGia":
                   return 3;
+              case "batBuoc":
+                  return 4;
+              case "ngaySuaDoi":
+                  return 5;
+              case "loaiSuaDoi":
+                  return 6;
               default:
                   return 0;
           }

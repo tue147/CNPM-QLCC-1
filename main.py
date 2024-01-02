@@ -197,6 +197,31 @@ def user():
 Ho Khau
 '''
 
+@app.route('/api/HK/history')
+def HK_history():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_hk = show(['lich_su_ho_gd'], ['*'])
+        return render_template('main_HK_history.html',
+                               user={
+                                   'user': 'admin',
+                                   'USER': 'HK',
+                                   'data': data_hk,
+                               })  # update for admin
+      else:
+        data_hk = show(['lich_su_ho_gd'], ['*'],
+                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+        return render_template('main_HK_history.html',
+                               user={
+                                   'user': 'user',
+                                   'USER': 'HK',
+                                   'data': data_hk
+                               })  # update for user
+  except:
+    pass
+  return redirect('/login')  # if something wrong: redirect to login
+
 
 @app.route('/api/HK')
 def HK():
@@ -348,6 +373,40 @@ Nhan khau
 '''
 
 
+@app.route('/api/NK/history')
+def NK_history():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_nk = show(['lich_su_nhan_khau'], ['*'])
+        for x in data_nk:
+          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat()
+        return render_template('main_NK_history.html',
+                               user={
+                                   'user': 'admin',
+                                   'USER': 'NK',
+                                   'data': data_nk,
+                               })  # update for admin
+      else:
+        list_hogd = show(['ho_gd'], ['id_ho'],
+                         conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+        data_nk = show(
+            ['lich_su_nhan_khau'], ['*'],
+            conditions=[
+                ('id_ho',
+                 f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
+            ])
+        return render_template('main_NK_history.html',
+                               user={
+                                   'user': 'user',
+                                   'USER': 'NK',
+                                   'data': data_nk
+                               })  # update for user
+  except:
+    pass
+  return redirect('/login')  # if something wrong: redirect to login
+
+
 @app.route('/api/NK')
 def NK():
   try:
@@ -384,21 +443,31 @@ def NK():
 
 @app.route('/api/NK/add')
 def NK_add():
+  stt = show(['lich_su_nhan_khau'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
   return render_template('form_nhankhau.html',
                          nhankhau={
                              'title': 'Thêm Nhân Khẩu',
                              'func': 'add',
-                             'form_name': 'Resident Form'
+                             'form_name': 'Resident Form',
+                             'stt': stt[0]['max_stt'] + 1,
                          })
 
 
 @app.route('/api/NK/update')
 def NK_update():
+  stt = show(['lich_su_nhan_khau'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
   return render_template('form_nhankhau.html',
                          nhankhau={
                              'title': 'Thay đổi Nhân Khẩu',
                              'func': 'update',
-                             'form_name': 'Resident Form'
+                             'form_name': 'Resident Form',
+                             'stt': stt[0]['max_stt'] + 1,
                          })
 
 
@@ -425,6 +494,11 @@ def NK_apply(func):
     values = [
         1 if item == 'Yes' else 0 if item == 'No' else item for item in values
     ]
+    values.append("Add")
+    values_without_history = values.copy()
+    values_without_history.pop()  # remove type
+    values_without_history.pop()  # remove date
+    values_without_history.remove(values_without_history[0])  # remove stt
     id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {values[-1]}')])
     print(id_ho)
     if len(id_ho) != 1:
@@ -432,6 +506,7 @@ def NK_apply(func):
     #   values.append('test')
     try:
       create('nhan_khau', [tuple(values)])
+      create('lich_su_nhan_khau', [tuple(values)])
     except:
       return render_template('error.html')
     # commit()
@@ -442,29 +517,50 @@ def NK_apply(func):
     print(data)
     id = data.get('CCCD')
     data = {k: v for k, v in data.items() if k != 'CCCD'}
+    data["LOAI_SUA_DOI"] = "Update"
     if data['TINH_TRANG_CU_TRU'] == 'Yes':
       data['TINH_TRANG_CU_TRU'] = 1
     else:
       data['TINH_TRANG_CU_TRU'] = 0
+    data_without_history = data.copy()
+    del data_without_history['NGAY_SUA_DOI']
+    del data_without_history['LOAI_SUA_DOI']
+    del data_without_history['stt']
+    del data_without_history['ID_DICH_VU']
+    values = [data.get(key) for key in data]
     find_cccd = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
     id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {data["ID_HO"]}')])
-    if len(find_cccd) == 1 and len(id_ho) == 1:
-      modify('nhan_khau',
-             position=data.keys(),
-             value=data.values(),
-             index=id,
-             primary_key="CCCD")
-      # commit()
-      return render_template('submit_confirmation.html')
-    else:
+    try:
+      if len(find_cccd) == 1 and len(id_ho) == 1:
+        modify('nhan_khau',
+               position=data.keys(),
+               value=data.values(),
+               index=id,
+               primary_key="CCCD")
+        create('lich_su_dich_vu', [tuple(values)])
+        # commit()
+        return render_template('submit_confirmation.html')
+      else:
+        return render_template('error.html')
+    except:
       return render_template('error.html')
 
   elif func == "delete":
     id = data.get('CCCD')
     print(id)
-    find_account = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
-    if len(find_account) == 1:
+    find_people = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
+    if len(find_people) == 1:
+      stt = show(['lich_su_nhan_khau'],
+                 special_column_name=[(['stt'], "max({})", "max_stt")],
+                 column_name=[None])
       delete('nhan_khau', conditions=[(id, "CCCD = $")])
+      values = [
+          stt[0]['max_stt'] + 1, find_people[0]['CCCD'],
+          find_service[0]['HO_TEN'], find_service[0]['NGAY_SINH'],
+          find_service[0]['QUAN_HE'], find_service[0]['TINH_TRANG_CU_TRU'],
+          find_service[0]['ID_HO'], time, "Delete"
+      ]
+      create('lich_su_nhan_khau', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
     else:
@@ -669,14 +765,14 @@ Dich Vu
 '''
 
 
-@app.route('/api/DV')
+@app.route('/api/DV/history')
 def DV():
   try:
     if 'id' in session:
       if session['admin']:
         data_dv = show(['lich_su_dich_vu'], ['*'])
         print(data_dv)
-        return render_template('main_dichvu.html',
+        return render_template('main_DV_history.html',
                                user={
                                    'user': 'admin',
                                    'USER': 'DV',
@@ -696,14 +792,42 @@ def DV():
   return redirect('/login')  # if something wrong: redirect to login
 
 
+@app.route('/api/DV')
+def DV_history():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_dv = show(['dich_vu'], ['*'])
+        print(data_dv)
+        return render_template('main_dichvu.html',
+                               user={
+                                   'user': 'admin',
+                                   'USER': 'DV',
+                                   'data': data_dv
+                               })  # update for admin
+      else:
+        data_dv = show(['dich_vu'], ['*'],
+                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+        return render_template('main_dichvu.html',
+                               user={
+                                   'user': 'user',
+                                   'USER': 'DV',
+                                   'data': data_dv
+                               })  # update for user
+  except:
+    pass
+  return redirect('/login')  # if something wrong: redirect to login
+
+
 @app.route('/api/DV/add')
 def DV_add():
-  stt = show(['lich_su_dich_vu'], 
+  stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
-  id_dich_vu = show(['dich_vu'], 
-                    special_column_name=[(['ID_DICH_VU'], "max({})", "max_iddv")],
+  id_dich_vu = show(['dich_vu'],
+                    special_column_name=[(['ID_DICH_VU'], "max({})",
+                                          "max_iddv")],
                     column_name=[None])
   print(id_dich_vu)
   return render_template('form_dichvu.html',
@@ -718,7 +842,7 @@ def DV_add():
 
 @app.route('/api/DV/update')
 def DV_update():
-  stt = show(['lich_su_dich_vu'], 
+  stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
@@ -810,13 +934,15 @@ def DV_apply(func):
     print(id)
     find_service = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
     if len(find_service) == 1:
-      stt = show(['lich_su_dich_vu'], 
-           special_column_name=[(['stt'], "max({})", "max_stt")],
-           column_name=[None])
+      stt = show(['lich_su_dich_vu'],
+                 special_column_name=[(['stt'], "max({})", "max_stt")],
+                 column_name=[None])
       delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
-      values = [stt[0]['max_stt'] + 1, find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
-                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], time, "Delete"
-               ]
+      values = [
+          stt[0]['max_stt'] + 1, find_service[0]['ID_DICH_VU'],
+          find_service[0]['TEN_DICH_VU'], find_service[0]['don_gia'],
+          find_service[0]['BAT_BUOC'], time, "Delete"
+      ]
       create('lich_su_dich_vu', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
