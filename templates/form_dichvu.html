@@ -12,7 +12,7 @@
         <label for="stt">STT:</label>
         <input type="number" id="stt" name="stt" required value="{{dichvu['stt']}}"><br>
         <label for="idDichVu">ID dịch vụ:</label>
-        <input type="text" id="idDichVu" name="ID_DICH_VU" required value="{{dichvu['idDichVu']}}"><br>
+        <input type="text" id="idDichVu" name="ID_DICH_VU" required value="{{dichvu['idDichVu']}}" onchange="updateFormID_DICH_VU()"><br>
         <label for="tenDichVu">Tên dịch vụ:</label>
         <input type="text" id="tenDichVu" name="TEN_DICH_VU" required><br>
         <label for="donGia">Đơn giá:</label>
@@ -29,11 +29,36 @@
     </form>
     <button type="button" onclick="setDefault()">Reset to Default</button>
   </div>
-  <script>
-  function setDefault() {
-      document.getElementById('stt').value = "{{dichvu['stt']}}";
-      document.getElementById('idDichVu').value = "{{dichvu['idDichVu']}}";
-  }
+    <script>
+      function setDefault() {
+          document.getElementById('stt').value = "{{dichvu['stt']}}";
+          document.getElementById('idDichVu').value = "{{dichvu['idDichVu']}}";
+      }
+      function updateFormID_DICH_VU() {
+        if ("{{dichvu['func']}}"=='update'){
+          var id_dv = document.getElementById('idDichVu').value;
+          fetch(`/api/getFormID_DICH_VU?idDichVu=${id_dv}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('ID dịch vụ không tồn tại!');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  document.getElementById('tenDichVu').value = data.tenDichVu;
+                  document.getElementById('donGia').value = data.donGia;
+                  document.getElementById('batBuoc').value = data.batBuoc;
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+                document.getElementById('tenDichVu').value = '';
+                document.getElementById('donGia').value = '';
+                document.getElementById('batBuoc').value = '';
+                document.getElementById('idDichVu').value = '';
+              });
+            }
+      }
   </script>
 </body>
 </html>

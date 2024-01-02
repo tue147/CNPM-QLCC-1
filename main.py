@@ -354,6 +354,8 @@ def NK():
     if 'id' in session:
       if session['admin']:
         data_nk = show(['nhan_khau'], ['*'])
+        for x in data_nk:
+          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat()
         return render_template('main_nhankhau.html',
                                user={
                                    'user': 'admin',
@@ -804,15 +806,16 @@ def DV_apply(func):
 
   elif func == "delete":
     id = data.get('ID_DICH_VU')
+    time = data.get('NGAY_THAY_DOI')
     print(id)
     find_service = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
-    if len(find_account) == 1:
+    if len(find_service) == 1:
       stt = show(['lich_su_dich_vu'], 
            special_column_name=[(['stt'], "max({})", "max_stt")],
            column_name=[None])
-      delete('dich_vu', conditions=[(id, "STT = $")])
+      delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
       values = [stt[0]['max_stt'] + 1, find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
-                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], 
+                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], time, "Delete"
                ]
       create('lich_su_dich_vu', [tuple(values)])
       # commit()
@@ -822,6 +825,26 @@ def DV_apply(func):
 
   else:
     return render_template("error.html")
+
+
+@app.route('/api/getFormID_DICH_VU')
+def get_form_id_dich_vu():
+  id_dv = request.args.get('idDichVu')
+  data = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id_dv}')])
+  print(data)
+  if len(data) == 1:
+    if data[0]['BAT_BUOC'] == 0:
+      data[0]['BAT_BUOC'] = 'tuNguyen'
+    else:
+      data[0]['BAT_BUOC'] = 'batBuoc'
+    print(data)
+    return jsonify(tenDichVu=data[0]['TEN_DICH_VU'],
+                   donGia=data[0]['don_gia'],
+                   batBuoc=data[0]['BAT_BUOC'])
+  else:
+    response = jsonify({"error": "ID dịch vụ không tồn tại!"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
 
 
 # test

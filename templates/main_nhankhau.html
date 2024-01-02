@@ -92,7 +92,7 @@
                           var row = `<tr>
                               <td>${item.CCCD}</td>
                               <td>${item.HO_TEN}</td>
-                              <td>${(new Date(item.NGAY_SINH)).toLocaleDateString()}</td>
+                              <td>${item.NGAY_SINH}</td>
                               <td>${item.QUAN_HE}</td>
                               <td>${item.TINH_TRANG_CU_TRU}</td>
                               <td>${item.ID_HO}</td>
@@ -180,8 +180,6 @@
         });
       }
       $("#changeMode").click(function() {
-        console.log(this.name);
-        console.log(this.textContent);
         [this.name, this.textContent] = [this.textContent, this.name];
         $(this).toggleClass("btn-success");
         changeMode();
@@ -236,7 +234,7 @@
             else {
               let now = {};
               item.querySelectorAll("td input:not([type='checkbox'])").forEach((it, idx) => {
-                if (it.value != it.placeholder) {
+                if (it.value != it.getAttribute('data-default')) {
                   now[position[idx]] = it.value;
                 }
               });
@@ -249,6 +247,11 @@
           fetch("NK/enhanced_mode", {
             method:"POST", 
             body: JSON.stringify(data)
+          }).then(response => {
+            if (!response.ok) {
+              throw new Error('Execute failed');
+            }
+            location.reload();
           }).catch(error => {alert(error);});
         }
         return data;
@@ -262,16 +265,23 @@
     function last_element(item) {
       return item[item.length-1];
     }
+    const list_type = ["", "", "date", "", "", ""];
+    const notWriteable = 1;
     function changeMode() {
       counter ^= 1;
       console.log(counter);
       if (counter === 1) {
         let container = document.getElementById('dataTableBody');
-        container.querySelectorAll("td").forEach((item) => {
+        /*container.querySelectorAll("td").forEach((item) => {
           item.innerHTML = `<input value = "${item.innerHTML}" placeholder="${item.innerHTML}">`;
         });
         $("#dataTableBody tr").each((idx, item) => {
           $(item).find("td input")[0].disabled = true;
+        });*/
+        $("#dataTableBody tr").each((i, item) => {
+          $(item).find("td").each((idx, items) => {
+            items.innerHTML = `<input type="${list_type[idx]}" value = "${items.innerHTML}" data-default="${items.innerHTML}" ${(notWriteable >> idx & 1) === 1 ? "disabled" : ""}>`;
+          });
         });
         let headers = document.querySelector('#dataTable thead').getElementsByTagName('tr')[0];
         headers.innerHTML += `<th><input type="checkbox" id="checkDel"></th>`;
@@ -279,10 +289,9 @@
           item.innerHTML += `<td><input type = "checkbox" id="checkDel${id}"></td>
                             <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`;
           item.querySelector("button").addEventListener("click", function () {
-            console.log(item);
             for (let x of item.querySelectorAll('td input')) {
               if (x.type === "checkbox") x.checked = false;
-              else x.value = x.placeholder;
+              else x.value = x.getAttribute('data-default');
             }
           });
         });
@@ -310,14 +319,14 @@
         last_element(document.querySelector('#dataTable thead').getElementsByTagName('tr')[0].getElementsByTagName('th')).remove();
         let container = document.getElementById('dataTableBody');
         container.querySelectorAll("td").forEach((item) => {
-          item.innerHTML = `${item.querySelector("input").value}`; 
+          item.innerHTML = `${item.querySelector("input").getAttribute('data-default')}`; 
         });
       }
     }
-    document.body.addEventListener("keydown", (event) => {
+    /*document.body.addEventListener("keydown", (event) => {
       if (event.key == "Escape") changeMode();
     });
     document.body.addEventListener("keydown", (event) => {
       if (event.key === "F2") console.log(extract_data());
-    });
+    });*/
 </script>
