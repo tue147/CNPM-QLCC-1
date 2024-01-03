@@ -173,9 +173,19 @@ def account_apply(func):
     return render_template("error.html")
 
 
+@app.route('/api/ADMIN/history')
+def admin_history():
+  return redirect('/admin')
+
+
+@app.route('/api/USER/history')
+def user_history():
+  return redirect('/user')
+
+
 @app.route('/admin')
 def admin():
-  data_hk = show(
+  data_tk = show(
       ['tai_khoan'],
       ['*'],
   )
@@ -184,7 +194,7 @@ def admin():
                          user={
                              'user': 'admin',
                              'USER': 'ADMIN',
-                             'data': data_hk
+                             'data': data_tk
                          })
 
 
@@ -196,6 +206,7 @@ def user():
 '''
 Ho Khau
 '''
+
 
 @app.route('/api/HK/history')
 def HK_history():
@@ -253,21 +264,37 @@ def HK():
 
 @app.route('/api/HK/add')
 def HK_add():
+  stt = show(['lich_su_ho_gd'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
   return render_template('form_hokhau.html',
                          hokhau={
-                             'title': 'Thêm Hộ Khẩu',
-                             'func': 'add',
-                             'form_name': 'Household Form'
+                             'title':
+                             'Thêm Hộ Khẩu',
+                             'func':
+                             'add',
+                             'form_name':
+                             'Household Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
 @app.route('/api/HK/update')
 def HK_update():
+  stt = show(['lich_su_ho_gd'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
   return render_template('form_hokhau.html',
                          hokhau={
-                             'title': 'Thay đổi Hộ Khẩu',
-                             'func': 'update',
-                             'form_name': 'Household Form'
+                             'title':
+                             'Thay đổi Hộ Khẩu',
+                             'func':
+                             'update',
+                             'form_name':
+                             'Household Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -295,14 +322,20 @@ def HK_apply(func):
         0 if item == 'standard' else 1 if item == 'deluxe' else item
         for item in values
     ]
-    print((values))
     find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
-                     [('ID_TAI_KHOAN', f'$ = {values[2]}')])
+                     [('ID_TAI_KHOAN', f'$ = {values[3]}')])
+    values.append("Add")
+    values_without_history = values.copy()
+    values_without_history.pop()  # remove type
+    values_without_history.pop()  # remove date
+    values_without_history.remove(values_without_history[0])  # remove stt
+    print((values))
     print(find_idtk)
     if len(find_idtk) != 1:
       return render_template('error.html')
     try:
-      create('ho_gd', [tuple(values)])
+      create('ho_gd', [tuple(values_without_history)])
+      create('lich_su_ho_gd', [tuple(values)])
     except:
       return render_template('error.html')
     # commit()
@@ -312,20 +345,32 @@ def HK_apply(func):
     data = request.form
     print(data)
     id = data.get('ID_HO')
-    data = {k: v for k, v in data.items() if k != 'ID_HO'}
+    data = {k: v for k, v in data.items()}
+    data['LOAI_SUA_DOI'] = 'Update'
     if data['LOAI_PHONG'] == 'standard':
       data['LOAI_PHONG'] = 0
     else:
       data['LOAI_PHONG'] = 1
+    values = [data.get(key) for key in data]
+    print(values)
+    data_without_history = data.copy()
+    del data_without_history['NGAY_SUA_DOI']
+    del data_without_history['LOAI_SUA_DOI']
+    del data_without_history['stt']
+    del data_without_history['ID_HO']
     find_hogd = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {id}')])
     find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
                      [('ID_TAI_KHOAN', f'$ = {data["ID_TAI_KHOAN"]}')])
     if len(find_hogd) == 1 and len(find_idtk) == 1:
-      modify('ho_gd',
-             position=data.keys(),
-             value=data.values(),
-             index=id,
-             primary_key="ID_HO")
+      try:
+        modify('ho_gd',
+               position=data_without_history.keys(),
+               value=data_without_history.values(),
+               index=id,
+               primary_key="ID_HO")
+        create('lich_su_ho_gd', [tuple(values)])
+      except:
+        return render_template('error.html')
       # commit()
       return render_template('submit_confirmation.html')
     else:
@@ -333,11 +378,23 @@ def HK_apply(func):
 
   elif func == "delete":
     id = data.get('ID Hộ')
+    time = data.get('NGAY_THAY_DOI')
     print(id)
     find_account = show(['ho_gd'], ['*'], [('id_ho', f'$ = {id}')])
     if len(find_account) == 1:
-      delete('ho_gd', conditions=[(id, "ID_HO = %")])
-      # commit()
+      try:
+        stt = show(['lich_su_ho_gd'],
+                   special_column_name=[(['stt'], "max({})", "max_stt")],
+                   column_name=[None])
+        delete('ho_gd', conditions=[(id, "ID_HO = $")])
+        values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+                  find_account[0]['ID_HO'], find_account[0]['CHU_HO'],
+                  find_account[0]['ID_TAI_KHOAN'], find_account[0]['SO_PHONG'],
+                  find_account[0]['LOAI_PHONG'], time, "Delete"]
+        create('lich_su_ho_gd', [tuple(values)])
+        # commit()
+      except:
+        return render_template('error.html')
       return render_template('submit_confirmation.html')
     else:
       return render_template("error.html")
@@ -390,12 +447,14 @@ def NK_history():
       else:
         list_hogd = show(['ho_gd'], ['id_ho'],
                          conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        data_nk = show(
-            ['lich_su_nhan_khau'], ['*'],
-            conditions=[
-                ('id_ho',
-                 f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
-            ])
+        data_nk = None
+        if len(list_hogd) != 0:
+          data_nk = show(
+              ['lich_su_nhan_khau'], ['*'],
+              conditions=[
+                  ('id_ho',
+                   f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
+              ])
         return render_template('main_NK_history.html',
                                user={
                                    'user': 'user',
@@ -424,12 +483,15 @@ def NK():
       else:
         list_hogd = show(['ho_gd'], ['id_ho'],
                          conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        data_nk = show(
-            ['nhan_khau'], ['*'],
-            conditions=[
-                ('id_ho',
-                 f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
-            ])
+        data_nk = None
+        if len(list_hogd) != 0:
+          data_nk = show(
+              ['nhan_khau'], ['*'],
+              conditions=[
+                  ('id_ho',
+                   f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
+              ])
+
         return render_template('main_nhankhau.html',
                                user={
                                    'user': 'user',
@@ -449,10 +511,14 @@ def NK_add():
   print(stt)
   return render_template('form_nhankhau.html',
                          nhankhau={
-                             'title': 'Thêm Nhân Khẩu',
-                             'func': 'add',
-                             'form_name': 'Resident Form',
-                             'stt': stt[0]['max_stt'] + 1,
+                             'title':
+                             'Thêm Nhân Khẩu',
+                             'func':
+                             'add',
+                             'form_name':
+                             'Resident Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -464,10 +530,14 @@ def NK_update():
   print(stt)
   return render_template('form_nhankhau.html',
                          nhankhau={
-                             'title': 'Thay đổi Nhân Khẩu',
-                             'func': 'update',
-                             'form_name': 'Resident Form',
-                             'stt': stt[0]['max_stt'] + 1,
+                             'title':
+                             'Thay đổi Nhân Khẩu',
+                             'func':
+                             'update',
+                             'form_name':
+                             'Resident Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -499,13 +569,14 @@ def NK_apply(func):
     values_without_history.pop()  # remove type
     values_without_history.pop()  # remove date
     values_without_history.remove(values_without_history[0])  # remove stt
-    id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {values[-1]}')])
+    id_ho = show(['ho_gd'], ['id_ho'],
+                 [('ID_HO', f'$ = {values_without_history[-1]}')])
     print(id_ho)
     if len(id_ho) != 1:
       return render_template('error.html')
     #   values.append('test')
     try:
-      create('nhan_khau', [tuple(values)])
+      create('nhan_khau', [tuple(values_without_history)])
       create('lich_su_nhan_khau', [tuple(values)])
     except:
       return render_template('error.html')
@@ -516,28 +587,30 @@ def NK_apply(func):
     data = request.form
     print(data)
     id = data.get('CCCD')
-    data = {k: v for k, v in data.items() if k != 'CCCD'}
+    data = {k: v for k, v in data.items()}
     data["LOAI_SUA_DOI"] = "Update"
     if data['TINH_TRANG_CU_TRU'] == 'Yes':
       data['TINH_TRANG_CU_TRU'] = 1
     else:
       data['TINH_TRANG_CU_TRU'] = 0
+    values = [data.get(key) for key in data]
     data_without_history = data.copy()
     del data_without_history['NGAY_SUA_DOI']
     del data_without_history['LOAI_SUA_DOI']
     del data_without_history['stt']
-    del data_without_history['ID_DICH_VU']
-    values = [data.get(key) for key in data]
+    del data_without_history['CCCD']
     find_cccd = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
     id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {data["ID_HO"]}')])
+    print(values)
+    print(data_without_history)
     try:
       if len(find_cccd) == 1 and len(id_ho) == 1:
         modify('nhan_khau',
-               position=data.keys(),
-               value=data.values(),
+               position=data_without_history.keys(),
+               value=data_without_history.values(),
                index=id,
                primary_key="CCCD")
-        create('lich_su_dich_vu', [tuple(values)])
+        create('lich_su_nhan_khau', [tuple(values)])
         # commit()
         return render_template('submit_confirmation.html')
       else:
@@ -547,6 +620,7 @@ def NK_apply(func):
 
   elif func == "delete":
     id = data.get('CCCD')
+    time = data.get('NGAY_THAY_DOI')
     print(id)
     find_people = show(['nhan_khau'], ['*'], [('cccd', f'$ = {id}')])
     if len(find_people) == 1:
@@ -554,12 +628,11 @@ def NK_apply(func):
                  special_column_name=[(['stt'], "max({})", "max_stt")],
                  column_name=[None])
       delete('nhan_khau', conditions=[(id, "CCCD = $")])
-      values = [
-          stt[0]['max_stt'] + 1, find_people[0]['CCCD'],
-          find_service[0]['HO_TEN'], find_service[0]['NGAY_SINH'],
-          find_service[0]['QUAN_HE'], find_service[0]['TINH_TRANG_CU_TRU'],
-          find_service[0]['ID_HO'], time, "Delete"
-      ]
+      values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+                find_people[0]['CCCD'], find_people[0]['HO_TEN'],
+                find_people[0]['NGAY_SINH'], find_people[0]['QUAN_HE'],
+                find_people[0]['TINH_TRANG_CU_TRU'], find_people[0]['ID_HO'],
+                time, "Delete"]
       create('lich_su_nhan_khau', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
@@ -598,50 +671,73 @@ Thu chi
 '''
 
 
+@app.route('/api/TC/history')
+def TC_history():
+  return redirect('/api/TC')
+
+
 @app.route('/api/TC')
 def TC():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_tc = show(['thu_chi'], ['*'])
-        print(data_tc)
-        return render_template('main_thuchi.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'TC',
-                                   'data': data_tc
-                               })  # update for admin
-      else:
-        data_tc = show(['thu_chi'], ['*'],
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_tc = show(['thu_chi'], ['*'])
+      print(data_tc)
+      return render_template('main_thuchi.html',
+                             user={
+                                 'user': 'admin',
+                                 'USER': 'TC',
+                                 'data': data_tc
+                             })  # update for admin
+    else:
+      list_hogd = show(['ho_gd'], ['id_ho'],
                        conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        return render_template('main_thuchi.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'TC',
-                                   'data': data_tc
-                               })  # update for user
-  except:
-    pass
+      data_tc = None
+      if len(list_hogd) != 0:
+        data_tc = show(
+            ['thu_chi'], ['*'],
+            conditions=[
+                ('ID_HO',
+                 f'$ = {",".join([str(x["id_ho"]) for x in list_hogd])}')
+            ])
+      return render_template('main_thuchi.html',
+                             user={
+                                 'user': 'user',
+                                 'USER': 'TC',
+                                 'data': data_tc
+                             })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/TC/add')
 def TC_add():
+  stt = show(['thu_chi'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
   return render_template('form_thuchi.html',
                          thuchi={
                              'title': 'Thêm Khoản Thu',
                              'func': 'add',
-                             'form_name': 'Payment Form'
+                             'form_name': 'Payment Form',
+                             'stt': (stt[0]['max_stt'] +1) if stt[0]['max_stt'] else 1,
                          })
 
 
 @app.route('/api/TC/update')
 def TC_update():
+  stt = show(['thu_chi'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
   return render_template('form_thuchi.html',
                          thuchi={
                              'title': 'Thay đổi Khoản Thu',
                              'func': 'update',
-                             'form_name': 'Payment Form'
+                             'form_name': 'Payment Form',
+                             'stt': (stt[0]['max_stt'] +1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -779,9 +875,8 @@ def DV():
                                    'data': data_dv
                                })  # update for admin
       else:
-        data_dv = show(['lich_su_dich_vu'], ['*'],
-                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        return render_template('main_dichvu.html',
+        data_dv = show(['lich_su_dich_vu'], ['*'])
+        return render_template('main_DV_history.html',
                                user={
                                    'user': 'user',
                                    'USER': 'DV',
@@ -806,8 +901,7 @@ def DV_history():
                                    'data': data_dv
                                })  # update for admin
       else:
-        data_dv = show(['dich_vu'], ['*'],
-                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+        data_dv = show(['dich_vu'], ['*'])
         return render_template('main_dichvu.html',
                                user={
                                    'user': 'user',
@@ -830,14 +924,19 @@ def DV_add():
                                           "max_iddv")],
                     column_name=[None])
   print(id_dich_vu)
-  return render_template('form_dichvu.html',
-                         dichvu={
-                             'title': 'Thêm Dịch Vụ',
-                             'func': 'add',
-                             'form_name': 'Service Form',
-                             'stt': stt[0]['max_stt'] + 1,
-                             'idDichVu': id_dich_vu[0]['max_iddv'] + 1,
-                         })
+  return render_template(
+      'form_dichvu.html',
+      dichvu={
+          'title':
+          'Thêm Dịch Vụ',
+          'func':
+          'add',
+          'form_name':
+          'Service Form',
+          'stt': (stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+          'idDichVu':
+          (id_dich_vu[0]['max_iddv'] + 1) if id_dich_vu[0]['max_iddv'] else 1,
+      })
 
 
 @app.route('/api/DV/update')
@@ -848,10 +947,14 @@ def DV_update():
   print(stt)
   return render_template('form_dichvu.html',
                          dichvu={
-                             'title': 'Thay đổi Dịch Vụ',
-                             'func': 'update',
-                             'form_name': 'Service Form',
-                             'stt': stt[0]['max_stt'] + 1,
+                             'title':
+                             'Thay đổi Dịch Vụ',
+                             'func':
+                             'update',
+                             'form_name':
+                             'Service Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -938,11 +1041,10 @@ def DV_apply(func):
                  special_column_name=[(['stt'], "max({})", "max_stt")],
                  column_name=[None])
       delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
-      values = [
-          stt[0]['max_stt'] + 1, find_service[0]['ID_DICH_VU'],
-          find_service[0]['TEN_DICH_VU'], find_service[0]['don_gia'],
-          find_service[0]['BAT_BUOC'], time, "Delete"
-      ]
+      values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+                find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
+                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], time,
+                "Delete"]
       create('lich_su_dich_vu', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
@@ -973,15 +1075,179 @@ def get_form_id_dich_vu():
     return response
 
 
+'''
+Report
+'''
+
+
+@app.route('/api/RP/history')
+def RP_history():
+  return redirect('/api/RP')
+
+
+@app.route('/api/RP')
+def RP():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_rp = show(['report'], ['*'])
+        print(data_rp)
+        return render_template('main_report.html',
+                               user={
+                                   'user': 'admin',
+                                   'USER': 'RP',
+                                   'data': data_rp
+                               })  # update for admin
+      else:
+        data_rp = show(['report'], ['*'],
+                       conditions=[('ID_TAI_KHOAN', f'$ = {session["id"]}')])
+        return render_template('main_report.html',
+                               user={
+                                   'user': 'user',
+                                   'USER': 'RP',
+                                   'data': data_rp
+                               })  # update for user
+  except:
+    pass
+  return redirect('/login')  # if something wrong: redirect to login
+
+
+@app.route('/api/RP/add')
+def RP_add():
+  stt = show(['report'],
+             special_column_name=[(['stt'], "max({})", "max_stt")],
+             column_name=[None])
+  print(stt)
+  return render_template('form_report.html',
+                         report={
+                             'title':
+                             'Thêm Report',
+                             'func':
+                             'add',
+                             'form_name':
+                             'Report Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
+                         })
+
+
+@app.route('/api/RP/update')
+def RP_update():
+  return render_template('form_report.html',
+                         report={
+                             'title': 'Thêm Report',
+                             'func': 'update',
+                             'form_name': 'Report Form',
+                             'stt': " ",
+                         })
+
+
+@app.route('/api/RP/delete')
+def RP_delete():
+  return render_template('form_delete.html',
+                         format={
+                             'title': 'Xóa Report',
+                             'class': 'api/RP',
+                             'name': 'STT',
+                             'label': 'STT'
+                         })
+
+
+@app.route('/api/RP/<func>/apply', methods=['post'])
+def RP_apply(func):
+  data = request.form
+  if func == "add":
+    values = [data.get(key) for key in data]
+    values.insert(1, session['id'])
+    print(values)
+    # try:
+    create('report', [tuple(values)])
+    # commit()
+    return render_template('submit_confirmation.html')
+    # except:
+    #   return render_template('error.html')
+
+  elif func == "update":
+    id = data.get('STT')
+    data = {k: v for k, v in data.items() if k != 'STT'}
+    data["ID_TAI_KHOAN"] = session['id']
+    print(data)
+    find_stt = show(['report'], ['STT'], [('STT', f'$ = {id}')])
+    if len(find_stt) == 1:
+      modify('report',
+             position=data.keys(),
+             value=data.values(),
+             index=id,
+             primary_key="STT")
+      # commit()
+      return render_template('submit_confirmation.html')
+    else:
+      return render_template('error.html')
+
+  elif func == "delete":
+    id = data.get('STT')
+    print(id)
+    find_stt = show(['report'], ['STT'], [('STT', f'$ = {id}')])
+    if len(find_stt) == 1:
+      delete('report', conditions=[(id, "STT = $")])
+      # commit()
+      return render_template('submit_confirmation.html')
+    else:
+      return render_template("error.html")
+
+  else:
+    return render_template('error.html')
+
+
+@app.route('/api/getFormREPORT')
+def get_form_report():
+  stt = request.args.get('stt')
+  data = show(['report'], ['NOI_DUNG','ID_TAI_KHOAN'], [('STT', f'$ = {stt}')])
+  print(data)
+  if data[0]['id_tai_khoan'] != session['id']:
+    response = jsonify({"error": "Không có quyền truy nhập"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
+  print(data)
+  if len(data) == 1:
+    return jsonify(noiDung=data[0]['noi_dung'])
+  else:
+    response = jsonify({"error": "STT không tồn tại!"})
+    response.status_code = 404  # Set the status code to indicate not found
+    return response
+
+
 # test
 @app.route("/api/NK/enhanced_mode", methods=["POST", "GET"])
-def execute_change():
+def execute_changeNK():
   data = json.loads(request.data)
   print(data)
   for x in data['delete']:
     delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
   for x in data['modify']:
     modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
+  return "Xu li thanh cong"
+
+
+@app.route("/api/HK/enhanced_mode", methods=["POST", "GET"])
+def execute_changeHK():
+  data = json.loads(request.data)
+  print(data)
+  for x in data['delete']:
+    delete("ho_gd", [('id_ho', f'$ = {x["id_ho"]}')])
+  for x in data['modify']:
+    modify("ho_gd", x.keys(), x.values(), "id_ho", x['id_ho'])
+  return "Xu li thanh cong"
+
+
+@app.route("/api/TC/enhanced_mode", methods=["POST", "GET"])
+def execute_changeTC():
+  data = json.loads(request.data)
+  print(data)
+  for x in data['delete']:
+    delete("thu_chi", [('stt', f'$ = {x["stt"]}')])
+  for x in data['modify']:
+    modify("thu_chi", x.keys(), x.values(), "stt", x['stt'])
   return "Xu li thanh cong"
 
 

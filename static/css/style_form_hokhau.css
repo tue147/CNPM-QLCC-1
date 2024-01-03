@@ -36,3 +36,8 @@ button {
 button:hover {
     background-color: #0056b3;
 }  
+.form-container {
+    max-height: 80vh; /* Adjust based on your needs */
+    overflow-y: auto; /* Adds scrolling */
+    padding: 20px;
+}

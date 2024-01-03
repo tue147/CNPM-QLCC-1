@@ -10,7 +10,7 @@
     <form id="{{thuchi['form_name']}}">
         <h2>Thu chi</h2>
         <label for="stt">STT:</label>
-        <input type="text" id="stt" name="STT" required onchange="updateFormSTT()"><br>
+        <input type="text" id="stt" name="STT" required onchange="updateFormSTT()" value="{{thuchi['stt']}}"><br>
         <label for="idDichVu">ID dịch vụ:</label>
         <input type="text" id="idDichVu" name="ID_DICH_VU" required onchange="updatePrice()"><br>
         <label for="tenDichVu">Tên dịch vụ:</label>
@@ -29,8 +29,12 @@
     </form>
     <script src="{{ url_for('static', filename='js/form_thuchi.js') }}"></script>
   </form>
+      <button type="button" onclick="setDefault()">Reset to Default</button>
   </div>  
   <script>
+    function setDefault() {
+        document.getElementById('stt').value = "{{thuchi['stt']}}";
+    }
     function updatePrice() {
         var idDichVu = document.getElementById('idDichVu').value;
         var idHo = document.getElementById('idHo').value;
@@ -58,6 +62,7 @@
                 document.getElementById('tenDichVu').value = '';
                 document.getElementById('idHo').value = '';
                 document.getElementById('stt').value = '';
+                document.getElementById('soLuong').value = '';
               });
           }
     }
@@ -90,6 +95,7 @@
               document.getElementById('tenDichVu').value = '';
               document.getElementById('idHo').value = '';
               document.getElementById('stt').value = '';
+              document.getElementById('soLuong').value = '';
             });
           }
     }

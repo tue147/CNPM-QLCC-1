@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include 'main_design/admin_design.html' %}
+  {% set user_design = 'main_design/' ~ user['user'] ~ '_design.html' %}
+  {% include user_design %}
   
 
 <!-- Bảng Nhân khẩu -->
@@ -9,8 +10,6 @@
     <div class="col-lg-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <!-- <h6 class="m-0 font-weight-bold text-primary">Quản lý Nhân khẩu</h6>
-                <button type="button" class="btn btn-primary btn-success" name="Back to Normal Mode" id="changeMode">Enhanced Mode</button> -->
               <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h6 class="m-0 font-weight-bold text-primary">Quản lý Nhân khẩu</h6>
                   <button type="button" class="btn btn-primary btn-success" name="Back to Normal Mode" id="changeMode">Enhanced Mode</button>
@@ -93,7 +92,7 @@
         filterTable();
     });
 
-    function filterTable() {
+    function filterTable() { 
         var input, filter, table, tr, td, i, txtValue, filterValue;
         input = document.getElementById("searchInput");
         filter = input.value.toUpperCase();
@@ -135,8 +134,23 @@
         }
     }
     // test
+    /*
+      Thêm button enhanced mode
+      Sửa id
+      thêm id=search-box
+      đổi cách lấy giá trị txtValue
+      Sửa đường link fetch và code main.py
+    */
     var counter = 0;
     var number_column = 0;
+    const list_type = ["", "", "date", "", "", ""];
+    const notWriteable = 1;
+    const validate_function = [null,
+                              null,
+                              null,
+                              null,
+                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;},
+                              null];
     {
       var  tableHead = document.getElementById("dataTable").getElementsByTagName('thead')[0];
       var list_name = tableHead.querySelectorAll('th');
@@ -205,12 +219,16 @@
             }
             else {
               let now = {};
+              let flag = true;
               item.querySelectorAll("td input:not([type='checkbox'])").forEach((it, idx) => {
+                if (validate_function[idx] && !validate_function[idx](it.value)) {
+                  flag = false;
+                }
                 if (it.value != it.getAttribute('data-default')) {
                   now[position[idx]] = it.value;
                 }
               });
-              if (Object.keys(now).length > 0) {
+              if (flag && Object.keys(now).length > 0) {
                 now[primary] = $(item).find("td input").eq(0).val();
                 data['modify'].push(now);
               }
@@ -237,14 +255,6 @@
     function last_element(item) {
       return item[item.length-1];
     }
-    const list_type = ["", "", "date", "", "", ""];
-    const notWriteable = 1;
-    const validate_function = [null,
-                              null,
-                              null,
-                              null,
-                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;},
-                              null];
     function changeMode() {
       counter ^= 1;
       console.log(counter);
@@ -260,7 +270,6 @@
           $(item).find("td").each((idx, items) => {
             items.innerHTML = `<input type="${list_type[idx]}" value = "${items.innerHTML}" data-default="${items.innerHTML}" ${(notWriteable >> idx & 1) === 1 ? "disabled" : ""}>`;
             if (!(validate_function[idx] === null)) {
-              console.log(items.querySelector("input"));
               items.querySelector("input").addEventListener("blur", function() {
                 if (!validate_function[idx](this.value)) {
                   this.style.borderColor = "#e74a3b";

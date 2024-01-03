@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include 'main_design/admin_design.html' %}
+  {% set user_design = 'main_design/' ~ user['user'] ~ '_design.html' %}
+  {% include user_design %}
 
 
 <!-- Bảng Hộ khẩu -->
@@ -9,10 +10,12 @@
     <div class="col-lg-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Hộ khẩu</h6>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h6 class="m-0 font-weight-bold text-primary">Quản Lý Hộ khẩu</h6>
+              <button type="button" class="btn btn-primary btn-success" name="Back to Normal Mode" id="changeMode">Enhanced Mode</button>
             </div>
             <div class="card-body">
-                <div class="form-row mb-3">
+                <div class="form-row mb-3" id="search-box">
                     <!-- Ô dropdown (hộp chọn) -->
                     <div class="col-md-4">
                         <select class="form-control" id="householdFilterSelect">
@@ -30,7 +33,7 @@
                     </div>
                 </div>
                     <div class="table-responsive">
-                      <table class="table table-bordered" id="householdTable" width="100%" cellspacing="0">
+                      <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                           <thead>
                               <tr>
                                   <th>ID hộ</th>
@@ -40,7 +43,7 @@
                                   <th>Loại phòng</th>
                               </tr>
                           </thead>
-                          <tbody id="tableBody">
+                          <tbody id="dataTableBody">
                               <!-- Data rows will be inserted here -->
                           </tbody>
                       </table>
@@ -51,7 +54,7 @@
                     var householdData = JSON.parse('{{ user["data"] | tojson | safe }}');
       
                     function insertDataToTable(data) {
-                      var tableBody = document.getElementById('tableBody');
+                      var dataTableBody = document.getElementById('dataTableBody');
                       data.forEach(function(item) {
                           var row = `<tr>
                               <td>${item.ID_HO}</td>
@@ -60,7 +63,7 @@
                               <td>${item.SO_PHONG}</td>
                               <td>${item.LOAI_PHONG}</td>
                           </tr>`;
-                          tableBody.innerHTML += row;
+                          dataTableBody.innerHTML += row;
                       });
                     }
       
@@ -73,25 +76,26 @@
     </div>
   <script>
       document.getElementById("householdSearchInput").addEventListener("keyup", function () {
-          filterHouseholdTable();
+          filterdataTable();
       });
 
       document.getElementById("householdFilterSelect").addEventListener("change", function () {
-          filterHouseholdTable();
+          filterdataTable();
       });
 
-      function filterHouseholdTable() {
+      function filterdataTable() {
           var input, filter, table, tr, td, i, txtValue, filterValue;
           input = document.getElementById("householdSearchInput");
           filter = input.value.toUpperCase();
-          table = document.getElementById("householdTable");
+          table = document.getElementById("dataTable");
           tr = table.getElementsByTagName("tr");
           filterValue = document.getElementById("householdFilterSelect").value;
 
           for (i = 0; i < tr.length; i++) {
               td = tr[i].getElementsByTagName("td")[getColumnIndex(filterValue)];
               if (td) {
-                  txtValue = td.textContent || td.innerText;
+                if (td.querySelector("input")) txtValue = td.querySelector("input").value;
+                else txtValue = td.textContent || td.innerText;
 
                   if ((filterValue === "all" || txtValue.toUpperCase().indexOf(filter) > -1)) {
                       tr[i].style.display = "";
@@ -118,6 +122,194 @@
                   return 0;
           }
       }
+    // test
+    var counter = 0;
+    var number_column = 0;
+    const list_type = ["", "", "", "", ""];
+    const notWriteable = 1;
+    const validate_function = [null,
+                              null,
+                              null,
+                              null,
+                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;}
+                              ];
+    {
+      var  tableHead = document.getElementById("dataTable").getElementsByTagName('thead')[0];
+      var list_name = tableHead.querySelectorAll('th');
+      var finale = "";
+      number_column = list_name.length;
+      for (let i = 0; i < number_column; i++) {
+        finale += `<th> <input id="Filter${i}" placeholder="Filter"> </th>`;
+      }
+      tableHead.innerHTML += `<tr>${finale} </tr>`;
+      for (let i = 0; i < list_name.length; i++) {
+        document.getElementById(`Filter${i}`).addEventListener("keyup", function () {
+          FilterRemaster();
+        });
+      }
+      $("#changeMode").click(function() {
+        [this.name, this.textContent] = [this.textContent, this.name];
+        $(this).toggleClass("btn-success");
+        changeMode();
+      });
+      function FilterRemaster() {
+        var table = document.getElementById("dataTable");
+        var tr = table.getElementsByTagName("tr");
+        var input = new Array(number_column);
+        for (let i = 0; i < number_column; i++) {
+          input[i] = document.getElementById(`Filter${i}`).value.toUpperCase();
+        }
+        var TextValue;
+        for (let i = 0; i < tr.length; i++) {
+          td = tr[i].getElementsByTagName('td');
+          var flag = true;
+          for (let j = 0; j < number_column; j++) {
+            if (td[j]) {
+              if (td[j].querySelector('input')) {
+                TextValue = td[j].querySelector('input').value;
+              }
+              else {
+                TextValue = td[j].textContent || td[j].innerText;
+              }
+              if (TextValue.toUpperCase().indexOf(input[j]) == -1) {
+                flag = false;
+                break;
+              }
+            }
+          }
+          if (flag) {
+            tr[i].style.display = "";
+          }
+          else {
+            tr[i].style.display = "none";
+          }
+        }
+      }
+    }
+    const extract_data = function () {
+      let position = ["id_ho", "chu_ho", "id_tai_khoan", "so_phong", "loai_phong"];
+      let primary = "id_ho";
+      /*document.querySelectorAll("#dataTable thead tr")[0].querySelectorAll("th").forEach((item) => {
+        if (item.childElementCount === 0) position.push(item.innerHTML);
+      });*/
+      return function() {
+        let data = {'delete': [], 'modify': []};
+        if (counter === 1) {
+          document.querySelectorAll("#dataTableBody tr").forEach((item) => {
+            if (item.querySelector("td input[type='checkbox']").checked) {
+              data['delete'].push({[primary]: item.querySelectorAll("td input")[0].value});
+            }
+            else {
+              let now = {};
+              let flag = true;
+              item.querySelectorAll("td input:not([type='checkbox'])").forEach((it, idx) => {
+                if (validate_function[idx] && !validate_function[idx](it.value)) {
+                  flag = false;
+                }
+                if (it.value != it.getAttribute('data-default')) {
+                  now[position[idx]] = it.value;
+                }
+              });
+              if (flag && Object.keys(now).length > 0) {
+                now[primary] = $(item).find("td input").eq(0).val();
+                data['modify'].push(now);
+              }
+            }
+          });
+          fetch("HK/enhanced_mode", {
+            method:"POST", 
+            body: JSON.stringify(data)
+          }).then(response => {
+            if (!response.ok) {
+              throw new Error('Execute failed');
+            }
+            location.reload();
+          }).catch(error => {alert(error);});
+        }
+        return data;
+      };
+    }();
+    function checkAllBox() {
+        document.getElementById('dataTableBody').querySelectorAll("tr").forEach((item) => {
+        item.querySelector("td input[type='checkbox']").checked = this.checked;
+      });
+    }
+    function last_element(item) {
+      return item[item.length-1];
+    }
+    function changeMode() {
+      counter ^= 1;
+      console.log(counter);
+      if (counter === 1) {
+        let container = document.getElementById('dataTableBody');
+        /*container.querySelectorAll("td").forEach((item) => {
+          item.innerHTML = `<input value = "${item.innerHTML}" placeholder="${item.innerHTML}">`;
+        });
+        $("#dataTableBody tr").each((idx, item) => {
+          $(item).find("td input")[0].disabled = true;
+        });*/
+        $("#dataTableBody tr").each((i, item) => {
+          $(item).find("td").each((idx, items) => {
+            items.innerHTML = `<input type="${list_type[idx]}" value = "${items.innerHTML}" data-default="${items.innerHTML}" ${(notWriteable >> idx & 1) === 1 ? "disabled" : ""}>`;
+            if (!(validate_function[idx] === null)) {
+              items.querySelector("input").addEventListener("blur", function() {
+                if (!validate_function[idx](this.value)) {
+                  this.style.borderColor = "#e74a3b";
+                }
+              });
+            }
+          });
+        });
+        let headers = document.querySelector('#dataTable thead').getElementsByTagName('tr')[0];
+        //headers.innerHTML += `<th><input type="checkbox" id="checkDel"></th>`;
+        $(headers).append(`<th><input type="checkbox" id="checkDel"></th>`);
+        container.querySelectorAll("tr").forEach((item, id) => {
+          /*item.innerHTML += `<td><input type = "checkbox" id="checkDel${id}"></td>
+                            <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`;*/
+          $(item).append(`<td><input type = "checkbox" id="checkDel${id}"></td>
+                        <td><button type="button" class="btn btn-outline-primary">Reset</button></td>`);
+          item.querySelector("button").addEventListener("click", function () {
+            for (let x of item.querySelectorAll('td input')) {
+              if (x.type === "checkbox") x.checked = false;
+              else x.value = x.getAttribute('data-default');
+            }
+          });
+        });
+        document.getElementById("checkDel").addEventListener("change", checkAllBox);
+        $("#search-box div").last().removeClass("col-md-8").addClass("col-md-7");
+        //$("#search-box").html((i, inner) => {return  inner + `<div class="col-md-1"><button type="submit" class="btn btn-danger">Submit</button></div>`;});
+        $("#search-box").append(`<div class="col-md-1"><button type="submit" class="btn btn-danger">Submit</button></div>`);
+        $("#search-box").find("button").eq(0).click(function() {
+          console.log(extract_data());
+        });
+      }
+      else {
+        $("#search-box div").last().remove();
+        $("#search-box div").last().removeClass("col-md-7").addClass("col-md-8");
+        document.getElementById("checkDel").removeEventListener("change", checkAllBox);
+        /*document.getElementById('dataTable').querySelectorAll('input[id^="checkDel"]').forEach((item) => {
+          const parent = item.parentNode;
+          if (parent) {
+            parent.remove();
+          }
+        });*/
+        document.querySelectorAll("#dataTableBody tr").forEach((item) => {
+          last_element(item.querySelectorAll("td")).remove();
+          last_element(item.querySelectorAll("td")).remove();
+        });
+        last_element(document.querySelector('#dataTable thead').getElementsByTagName('tr')[0].getElementsByTagName('th')).remove();
+        let container = document.getElementById('dataTableBody');
+        container.querySelectorAll("td").forEach((item) => {
+          item.innerHTML = `${item.querySelector("input").getAttribute('data-default')}`; 
+        });
+      }
+    }
+    /*document.body.addEventListener("keydown", (event) => {
+      if (event.key == "Escape") changeMode();
+    });
+    document.body.addEventListener("keydown", (event) => {
+      if (event.key === "F2") console.log(extract_data());
+    });*/
   </script>
 
 </div>

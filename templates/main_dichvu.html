@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include 'main_design/admin_design.html' %}
+  {% set user_design = 'main_design/' ~ user['user'] ~ '_design.html' %}
+  {% include user_design %}
 
 <!-- Bảng Hộ khẩu -->
 <div class="row">
     <div class="col-lg-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Hộ khẩu</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Quản Lý Dịch vụ</h6>
             </div>
             <div class="card-body">
                 <div class="form-row mb-3">

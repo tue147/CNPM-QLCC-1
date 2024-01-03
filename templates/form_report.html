@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<form action="/api/RP/{{report['func']}}/apply" method="post">
+<head>
+    <title>{{report['title']}}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style_form_report.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Add Report</h2>
+      <div class="form-group">
+        <label for="stt">STT</label>
+        <input type="text" id="stt" name="STT" required value="{{report['stt']}}" onchange="updateFormSTT()">
+      </div>
+      <div class="form-group">
+        <label for="noi_dung">Nội dung</label>
+        <textarea id="noiDung" name="NOI_DUNG" required></textarea>
+        <label for="ngay">Ngày sửa đổi:</label>
+        <input type="date" id="ngay" name="NGAY" required><br>
+      </div>
+      <input type="submit" value="Submit">
+  <button type="button" onclick="setDefault()">Reset to Default</button>
+  </div>
+</body>
+  </div>
+    <script>
+      function setDefault() {
+          document.getElementById('stt').value = "{{report['stt']}}";
+      }
+      function updateFormSTT() {
+        if ("{{report['func']}}"=='update'){
+          var stt = document.getElementById('stt').value;
+          fetch(`/api/getFormREPORT?stt=${stt}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error("STT không tồn tại hoặc không có quyền truy nhập");
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  document.getElementById('noiDung').value = data.noiDung;
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+                document.getElementById('noiDung').value = '';
+                document.getElementById('stt').value = '';
+              });
+            }
+      }
+    </script>
+</html>
