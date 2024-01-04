@@ -241,8 +241,8 @@
             if (!response.ok) {
               throw new Error('Execute failed');
             }
-            location.reload();
-          }).catch(error => {alert(error);});
+            return response.text();
+          }).then(x => {location.reload(); alert(x); }).catch(error => {alert(error);});
         }
         return data;
       };

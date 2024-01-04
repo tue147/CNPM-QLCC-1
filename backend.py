@@ -152,7 +152,7 @@ def show(table_name,
     assert (False)
 
   full_column_name = [find(x) for x in column_name
-                      if x] if column_name else ["*"]
+                      if x] if column_name else []  # cho phep trong
   #full_column_name = [f"allin.{x}" for x in column_name]
   """print(f"top {limit}" if limit else "fail")
     print(','.join(full_column_name))
@@ -165,13 +165,18 @@ def show(table_name,
       ','.join(full_column_name + ([
           x[1].format(*(find(y) for y in x[0])) + f" as {x[2]}" if x[2] else ""
           for x in special_column_name
-      ] if special_column_name else [])), all_table, "where " +
+      ] if special_column_name else [])),
+      all_table,
+      "where " +
       ' and '.join([x[1].replace("$", find(x[0]))
                     for x in conditions]) if conditions else "",
       f"group by {find(group_by)}" if group_by else "",
-      "having " + ' and '.join(
-          [x[1].replace("$", find(x[0]))
-           for x in condition_aggressive]) if condition_aggressive else "",
+      "having " + ' and '.join([
+          x[1].replace(
+              "$", x[0]
+          )  # toi co tinh bo find(x[0]) vi having co the yeu cau func(x)
+          for x in condition_aggressive
+      ]) if condition_aggressive else "",
       f"order by {find(sort_by)}" if sort_by else "",
       f"limit {limit}" if limit else "")
   print(command)

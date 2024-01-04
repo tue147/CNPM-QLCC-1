@@ -3,6 +3,7 @@ from backend import *
 import random
 import json
 import datetime
+from datetime import datetime
 
 app = Flask(__name__,
             static_url_path='',
@@ -38,40 +39,40 @@ def logout():
 
 @app.route('/api/login', methods=['POST'])
 def login_verify():
-    # Expecting JSON data instead of form data
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    print(username, password, data)
+  # Expecting JSON data instead of form data
+  data = request.get_json()
+  username = data.get('username')
+  password = data.get('password')
+  print(username, password, data)
 
-    try:
-      find_account = show(['tai_khoan'], ['*'],
-                          [('ten_dang_nhap', f'$ = "{username}"'),
-                            ('mat_khau', f'$ = "{password}"')])
-      if len(find_account) != 1:
-          print("failed")
-          # Returning JSON response with error
-          return jsonify({'error': 'Tài khoản hoặc mật khẩu không tồn tại'}), 401
+  try:
+    find_account = show(['tai_khoan'], ['*'],
+                        [('ten_dang_nhap', f'$ = "{username}"'),
+                         ('mat_khau', f'$ = "{password}"')])
+    if len(find_account) != 1:
+      print("failed")
+      # Returning JSON response with error
+      return jsonify({'error': 'Tài khoản hoặc mật khẩu không tồn tại'}), 401
+    else:
+      print("success", find_account)
+      session['id'] = find_account[0]['ID_TAI_KHOAN']
+      session['admin'] = find_account[0]['ADMIN']
+
+      # Returning JSON response with success status
+      if session['admin']:
+        return jsonify({'redirect': '/admin'}), 200
       else:
-          print("success", find_account)
-          session['id'] = find_account[0]['ID_TAI_KHOAN']
-          session['admin'] = find_account[0]['ADMIN']
+        return jsonify({'redirect': '/user'}), 200
 
-          # Returning JSON response with success status
-          if session['admin']:
-              return jsonify({'redirect': '/admin'}), 200
-          else:
-              return jsonify({'redirect': '/user'}), 200
-
-    except Exception as e:
-        print(e)
-        # Returning JSON response with error
-        return jsonify({'error': 'Internal server error'}), 500
+  except Exception as e:
+    print(e)
+    # Returning JSON response with error
+    return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/register')
 def register():
-  return 1
+  return render_template('login.html')
 
 
 @app.route('/ADMIN/add')
@@ -203,7 +204,46 @@ def admin():
 
 @app.route('/user')
 def user():
-  return render_template('user.html', user={'user': 'user', 'USER': 'USER'})
+  id_ho = show(['ho_gd'], ['ID_HO'],
+               conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+  print(id_ho)
+  store = []
+  if len(id_ho) == 1:
+    phi = show(['dich_vu'], ['ID_DICH_VU', 'TEN_DICH_VU'],
+               [('BAT_BUOC', '$ = 1')])
+    data_tc = show(
+        ['thu_chi', 'dich_vu'],
+        ['ID_DICH_VU', 'TEN_DICH_VU', 'GIA_TIEN', 'DA_THU', 'ngay_thu'],
+        conditions=[
+            ('id_dich_vu',
+             f'$ in ({",".join([str(x["id_dich_vu"]) for x in phi])})'),
+            ('ID_HO', f'$ in ({",".join([str(x["id_ho"]) for x in id_ho])})'),
+        ],
+        #condition_aggressive=[('month(ngay_thu)', f'$ = {datetime.datetime.now().month}'),('year(ngay_thu)', f'$ = {datetime.datetime.now().year}')],
+        condition_aggressive=[
+            ('ngay_thu', f'month($) = {datetime.datetime.now().month}'),
+            ('ngay_thu', f'year($) = {datetime.datetime.now().year}')
+        ],
+    )
+    # print(data_tc)
+    store = [{
+        "ID_DICH_VU": k['id_dich_vu'],
+        "TEN_DICH_VU": k['ten_dich_vu'],
+        "CAN_PHAI_DONG": "Chưa đóng"
+    } for k in phi]
+    # print(store)
+    for data in data_tc:
+      if (data['gia_tien'] >= data['da_thu']):
+        for dic in store:
+          if dic['ID_DICH_VU'] == data['id_dich_vu']:
+            dic['CAN_PHAI_DONG'] = data["gia_tien"] - data["da_thu"]
+    print(store)
+  return render_template('user.html',
+                         user={
+                             'user': 'user',
+                             'USER': 'USER',
+                             'data': store
+                         })
 
 
 '''
@@ -722,10 +762,14 @@ def TC_add():
   print(stt)
   return render_template('form_thuchi.html',
                          thuchi={
-                             'title': 'Thêm Khoản Thu',
-                             'func': 'add',
-                             'form_name': 'Payment Form',
-                             'stt': (stt[0]['max_stt'] +1) if stt[0]['max_stt'] else 1,
+                             'title':
+                             'Thêm Khoản Thu',
+                             'func':
+                             'add',
+                             'form_name':
+                             'Payment Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -737,10 +781,14 @@ def TC_update():
   print(stt)
   return render_template('form_thuchi.html',
                          thuchi={
-                             'title': 'Thay đổi Khoản Thu',
-                             'func': 'update',
-                             'form_name': 'Payment Form',
-                             'stt': (stt[0]['max_stt'] +1) if stt[0]['max_stt'] else 1,
+                             'title':
+                             'Thay đổi Khoản Thu',
+                             'func':
+                             'update',
+                             'form_name':
+                             'Payment Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -1190,8 +1238,10 @@ def RP_apply(func):
   elif func == "delete":
     id = data.get('STT')
     print(id)
-    find_stt = show(['report'], ['STT','ID_TAI_KHOAN'], [('STT', f'$ = {id}')])
-    if len(find_stt) == 1 and (find_stt[0]['id_tai_khoan']==session['id'] or session['admin']):
+    find_stt = show(['report'], ['STT', 'ID_TAI_KHOAN'],
+                    [('STT', f'$ = {id}')])
+    if len(find_stt) == 1 and (find_stt[0]['id_tai_khoan'] == session['id']
+                               or session['admin']):
       delete('report', conditions=[(id, "STT = $")])
       # commit()
       return render_template('submit_confirmation.html')
@@ -1205,7 +1255,8 @@ def RP_apply(func):
 @app.route('/api/getFormREPORT')
 def get_form_report():
   stt = request.args.get('stt')
-  data = show(['report'], ['NOI_DUNG','ID_TAI_KHOAN'], [('STT', f'$ = {stt}')])
+  data = show(['report'], ['NOI_DUNG', 'ID_TAI_KHOAN'],
+              [('STT', f'$ = {stt}')])
   print(data)
   if data[0]['id_tai_khoan'] != session['id'] or not session['admin']:
     response = jsonify({"error": "Không có quyền truy nhập"})
@@ -1221,15 +1272,119 @@ def get_form_report():
 
 
 # test
+def add_change(data, change_name, history_name, x, lc):
+  test = list(data.values())
+  test.append(datetime.now())
+  test.append(change_name)
+  x[0] = x[0] + 1
+  test.insert(0, x[0])
+  lc.append(test)
+  #create('lich_su_nhan_khau', [test])
+
+
 @app.route("/api/NK/enhanced_mode", methods=["POST", "GET"])
 def execute_changeNK():
   data = json.loads(request.data)
   print(data)
-  for x in data['delete']:
-    delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
+  list_nk = {x['cccd'] for x in data['modify'] + data['delete']}
+  list_id = {
+      x['id_ho']
+      for x in data['modify'] + data['delete']
+      if 'id_ho' in x and x['id_ho'].isdigit()
+  }
+  if (len(list_nk) == 0):
+    return "Không có thay đổi"
+  list_nk = show(['nhan_khau'], ['*'],
+                 [('cccd', f'$ in ({",".join(list_nk)})')])
+  list_nk = {x['CCCD']: x for x in list_nk}
+  if (len(list_id) > 0):
+    list_id = show(['ho_gd'], ['id_ho'],
+                   [('id_ho', f'$ in ({",".join(list_id)})')])
+    list_id = {x['ID_HO'] for x in list_id}
+  noteDel = ""
+  stt_idx = show(['lich_su_nhan_khau'],
+                 special_column_name=[(['stt'], 'max({})', 'max_stt')
+                                      ])[0]['max_stt']
+  if (stt_idx == None):
+    stt_idx = [0]
+  else:
+    stt_idx = [int(stt_idx)]
+  list_will_change = []
+  """for x in data['delete']:
+    test = show(["nhan_khau"], ['*'],
+                conditions=[('cccd', f'$ = {x["cccd"]}')])
+    if (len(test) == 1):
+      try:
+        delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
+        add_change(test, "Delete", "lich_su_nhan_khau")
+      except:
+        noteDel += f'-cccd {x["cccd"]} gặp vấn đề trong việc loại bỏ\n'
+
+    else:
+      noteDel += f'-cccd {x["cccd"]} không tồn tại\n'
+
+  noteAdd = ""
   for x in data['modify']:
-    modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
-  return "Xu li thanh cong"
+    test = show(["nhan_khau"], ['*'],
+                conditions=[('cccd', f'$ = {x["cccd"]}')])
+    if (len(test) != 1):
+      noteAdd += f'-cccd {x["cccd"]}: không tồn tại\n'
+      continue
+    if ('id_ho' in x):
+      if not x['id_ho'].isdigit():
+        noteAdd += f'-cccd {x["cccd"]}: id hộ không là số nguyên\n'
+        continue
+      validate = show(["ho_gd"], ['*'],
+                      conditions=[('id_ho', f'$ = {x["id_ho"]}')])
+      if (len(validate) != 1):
+        noteAdd += f'-cccd {x["cccd"]}: không tồn tại id hộ {x["id_ho"]}\n'
+        continue
+    try:
+      modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
+      add_change(test, "Update", "lich_su_nhan_khau")
+    except:
+      noteAdd += f'-cccd {x["cccd"]} gặp vấn đề trong việc cập nhật\n'"""
+
+  for x in data['delete']:
+    if (x['cccd'] in list_nk):
+      try:
+        delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
+        add_change(list_nk[x['cccd']], "Delete", "lich_su_nhan_khau", stt_idx,
+                   list_will_change)
+      except:
+        noteDel += f'-cccd {x["cccd"]} gặp vấn đề trong việc loại bỏ\n'
+
+    else:
+      noteDel += f'-cccd {x["cccd"]} không tồn tại\n'
+
+  noteAdd = ""
+  for x in data['modify']:
+    if (x['cccd'] not in list_nk):
+      noteAdd += f'-cccd {x["cccd"]}: không tồn tại\n'
+      continue
+    if ('id_ho' in x):
+      if not x['id_ho'].isdigit():
+        noteAdd += f'-cccd {x["cccd"]}: id hộ không là số nguyên\n'
+        continue
+      if (x['id_ho'] not in list_id):
+        noteAdd += f'-cccd {x["cccd"]}: không tồn tại id hộ {x["id_ho"]}\n'
+        continue
+    try:
+      modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
+      add_change(list_nk[x['cccd']], "Update", "lich_su_nhan_khau", stt_idx,
+                 list_will_change)
+    except:
+      noteAdd += f'-cccd {x["cccd"]} gặp vấn đề trong việc cập nhật\n'
+
+  create('lich_su_nhan_khau', list_will_change)
+  response = ""
+  if (noteDel != ""):
+    response += "Những nhân khẩu sau đây không xóa được:\n" + noteDel
+  if (noteAdd != ""):
+    response += "Những nhân khẩu sau đây không thay đổi được:\n" + noteAdd
+  if (response == ""):
+    response = "Thay đổi thành công"
+  return response
 
 
 @app.route("/api/HK/enhanced_mode", methods=["POST", "GET"])
