@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <form action="/api/login" method="post">
+  <form action="/api/login" method="post" onsubmit="handleLogin(event)">
   <head>
       <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -59,11 +59,59 @@
                                           <button type='submit' class="btn btn-primary btn-user btn-block">
                                               Login
                                           </button> 
-                                        <p> {{error['error_code']}}</p>
+                                          <!-- <p id="error_message" style="color: red;"></p> -->
                                           <hr>   
                                         <script>
                                           function showpass() {
                                             var x = document.getElementById("exampleInputPassword");
                                             x.type = x.type === "password" ? "text" : "password";
                                           };
+                                          function handleLogin(event) {
+                                            event.preventDefault(); // Prevent the default form submission
+
+                                            var username = document.getElementById('exampleInputEmail').value;
+                                            var password = document.getElementById('exampleInputPassword').value;
+
+                                            fetch('/api/login', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                },
+                                                body: JSON.stringify({username: username, password: password}),
+                                            })
+                                            .then(response => {
+                                                if (!response.ok) {
+                                                    // If the response is not ok, throw an error with the status text
+                                                    return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
+                                                }
+                                                return response.json();  // Parse the JSON in the response
+                                            })
+                                            .then(data => {
+                                                if (data.error) {
+                                                    // If there's an error, display it
+                                                    document.getElementById('error_message').textContent = data.error;
+                                                } else {
+                                                    // If login is successful, redirect or do something else
+                                                    window.location.href = data.redirect;
+                                                }
+                                            })
+                                            .catch((error) => {
+                                                console.error('Error:', error);
+                                                alert('Login failed: ' + error.message);
+                                            });
+                                        }
                                         </script>
+                                        </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </body>
+  </form>
+</html>

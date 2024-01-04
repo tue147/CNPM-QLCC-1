@@ -23,7 +23,7 @@ def login():
       return redirect('/admin' if session['admin'] else '/user')
   except:
     pass
-  return render_template('login.html', error={'error_code': ""})
+  return render_template('login.html')
 
 
 @app.route('/logout')
@@ -38,32 +38,35 @@ def logout():
 
 @app.route('/api/login', methods=['POST'])
 def login_verify():
-  username = request.form.get('username')
-  password = request.form.get('password')
-  print(username, password, request.form)
-  try:
-    find_account = show(['tai_khoan'], ['*'],
-                        [('ten_dang_nhap', f'$ = "{username}"'),
-                         ('mat_khau', f'$ = "{password}"')])
-    if len(find_account) != 1:
-      print("failed")
-      return render_template(
-          'login.html',
-          error={'error_code': 'Tài khoản hoặc mật khẩu không tồn tại'})
-    else:
-      print("success", find_account)
-      # print(acc)
-      session['id'] = find_account[0]['ID_TAI_KHOAN']
-      session['admin'] = find_account[0]['ADMIN']
-      if session['admin']:
-        #return render_template('admin.html', user={'user':'admin'})
-        return redirect('/admin')
-      else:
-        #return render_template('user.html', user={'user':'user'})
-        return redirect('/user')
+    # Expecting JSON data instead of form data
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    print(username, password, data)
 
-  except:
-    return render_template('error.html')
+    try:
+      find_account = show(['tai_khoan'], ['*'],
+                          [('ten_dang_nhap', f'$ = "{username}"'),
+                            ('mat_khau', f'$ = "{password}"')])
+      if len(find_account) != 1:
+          print("failed")
+          # Returning JSON response with error
+          return jsonify({'error': 'Tài khoản hoặc mật khẩu không tồn tại'}), 401
+      else:
+          print("success", find_account)
+          session['id'] = find_account[0]['ID_TAI_KHOAN']
+          session['admin'] = find_account[0]['ADMIN']
+
+          # Returning JSON response with success status
+          if session['admin']:
+              return jsonify({'redirect': '/admin'}), 200
+          else:
+              return jsonify({'redirect': '/user'}), 200
+
+    except Exception as e:
+        print(e)
+        # Returning JSON response with error
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/register')
