@@ -1187,8 +1187,8 @@ def RP_apply(func):
   elif func == "delete":
     id = data.get('STT')
     print(id)
-    find_stt = show(['report'], ['STT'], [('STT', f'$ = {id}')])
-    if len(find_stt) == 1:
+    find_stt = show(['report'], ['STT','ID_TAI_KHOAN'], [('STT', f'$ = {id}')])
+    if len(find_stt) == 1 and (find_stt[0]['id_tai_khoan']==session['id'] or session['admin']):
       delete('report', conditions=[(id, "STT = $")])
       # commit()
       return render_template('submit_confirmation.html')
@@ -1204,7 +1204,7 @@ def get_form_report():
   stt = request.args.get('stt')
   data = show(['report'], ['NOI_DUNG','ID_TAI_KHOAN'], [('STT', f'$ = {stt}')])
   print(data)
-  if data[0]['id_tai_khoan'] != session['id']:
+  if data[0]['id_tai_khoan'] != session['id'] or not session['admin']:
     response = jsonify({"error": "Không có quyền truy nhập"})
     response.status_code = 404  # Set the status code to indicate not found
     return response
