@@ -24,7 +24,7 @@
         <label for="daThu">Đã thu:</label>
         <input type="number" id="daThu" name="DA_THU" min="0" step="1000" required><br>
         <label for="ngayThu">Ngày thu:</label>
-        <input type="date" id="ngayThu" name="ngay_thu" required><br>
+        <input type="date" id="ngayThu" name="ngay_thu" required value="{{ today }}"><br>
         <button type="submit">Submit</button>
     </form>
     <script src="{{ url_for('static', filename='js/form_thuchi.js') }}"></script>
@@ -40,6 +40,7 @@
     }
     function setDefault() {
         document.getElementById('stt').value = "{{thuchi['stt']}}";
+        document.getElementById('ngaySuaDoi').value = "{{ today }}";
     }
     function updatePrice() {
         var idDichVu = document.getElementById('idDichVu').value;
@@ -49,7 +50,10 @@
           fetch(`/api/getPrice?idDichVu=${idDichVu}&idHo=${idHo}&soLuong=${soLuong}`)
               .then(response => {
                   if (!response.ok) {
-                      throw new Error('Dịch vụ hoặc hộ gia đình không tồn tại!');
+                    return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
                   }
                   return response.json();
               })

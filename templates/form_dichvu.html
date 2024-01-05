@@ -23,7 +23,7 @@
             <option value="batBuoc">Bắt buộc</option>
         </select><br>
         <label for="ngaySuaDoi">Ngày sửa đổi:</label>
-        <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required><br>
+        <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required value="{{ today }}"><br>
         </select><br>
         <button type="submit">Submit</button>
     </form>
@@ -39,6 +39,7 @@
       function setDefault() {
           document.getElementById('stt').value = "{{dichvu['stt']}}";
           document.getElementById('idDichVu').value = "{{dichvu['idDichVu']}}";
+          document.getElementById('ngaySuaDoi').value = "{{ today }}";
       }
       function updateFormID_DICH_VU() {
         if ("{{dichvu['func']}}"=='update'){
@@ -46,7 +47,10 @@
           fetch(`/api/getFormID_DICH_VU?idDichVu=${id_dv}`)
               .then(response => {
                   if (!response.ok) {
-                      throw new Error('ID dịch vụ không tồn tại!');
+                    return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
                   }
                   return response.json();
               })

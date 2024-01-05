@@ -27,7 +27,7 @@
                 <label for="idHo">ID Hộ:</label>
                 <input type="text" id="idHo" name="ID_HO"><br>
                 <label for="ngaySuaDoi">Ngày sửa đổi:</label>
-                <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required><br>
+                <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required value="{{ today }}"><br>
                 <button type="submit">Submit</button>
             </form>
             <button type="button" onclick="setDefault()">Reset to Default</button>
@@ -35,6 +35,7 @@
             <script>
               function setDefault() {
                   document.getElementById('stt').value = "{{nhankhau['stt']}}";
+                  document.getElementById('ngaySuaDoi').value = "{{ today }}";
               }
             function updateFormCCCD() {
               if ("{{nhankhau['func']}}"=='update'){
@@ -42,7 +43,10 @@
                 fetch(`/api/getFormCCCD?cccd=${cccd}`)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('CCCD không tồn tại!');
+                            return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
                         }
                         return response.json();
                     })
