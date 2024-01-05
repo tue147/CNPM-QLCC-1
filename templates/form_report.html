@@ -18,14 +18,15 @@
         <label for="ngay">Ngày sửa đổi:</label>
         <input type="date" id="ngay" name="NGAY" required><br>
       </div>
-      <input type="submit" value="Submit">
-  <button type="button" onclick="setDefault()">Reset to Default</button>
+      <input type="submit" value="Submit" style="width:20%;">
+  <button type="button" onclick="setDefault()" style="border-radius:4px; padding: 10px 20px;">Reset</button>
   </div>
 </body>
   </div>
     <script>
       function setDefault() {
           document.getElementById('stt').value = "{{report['stt']}}";
+          document.getElementById('noiDung').value = "";
       }
       function updateFormSTT() {
         if ("{{report['func']}}"=='update'){

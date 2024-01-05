@@ -129,8 +129,8 @@
     const notWriteable = 1;
     const validate_function = [null,
                               null,
-                              null,
-                              null,
+                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0;},
+                              (it) => {const num = Number(it); return !isNaN(num) && num > 0;},
                               (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;}
                               ];
     {
@@ -223,8 +223,8 @@
             if (!response.ok) {
               throw new Error('Execute failed');
             }
-            location.reload();
-          }).catch(error => {alert(error);});
+            return response.text();
+          }).then(x => {location.reload(); alert(x); }).catch(error => {alert(error);});
         }
         return data;
       };

@@ -150,7 +150,7 @@
                               null,
                               null,
                               (it) => {const num = Number(it); return !isNaN(num) && num >= 0 && num <= 1;},
-                              null];
+                              (it) => {const num = Number(it); return !isNaN(num) && num >= 0}];
     {
       var  tableHead = document.getElementById("dataTable").getElementsByTagName('thead')[0];
       var list_name = tableHead.querySelectorAll('th');

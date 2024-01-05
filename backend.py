@@ -125,7 +125,8 @@ def show(table_name,
          special_column_name=None,
          condition_aggressive=None,
          sort_by=None,
-         limit=None):
+         limit=None,
+         isLower=False):
   """
     tim kiem du lieu trong LIST bang table_name
     column_name: cac cot in ra trong bang ket qua
@@ -184,8 +185,11 @@ def show(table_name,
   """for x in cursor:
         print(x)"""
   return [
-      dict(zip([x[0] for x in cursor.description], x))
-      for x in cursor.fetchall()
+      dict(
+          zip([
+              x[0].lower() if isLower and isinstance(x[0], str) else x[0]
+              for x in cursor.description
+          ], x)) for x in cursor.fetchall()
   ]
 
 

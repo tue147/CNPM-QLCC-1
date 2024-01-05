@@ -221,8 +221,8 @@ def user():
         ],
         #condition_aggressive=[('month(ngay_thu)', f'$ = {datetime.datetime.now().month}'),('year(ngay_thu)', f'$ = {datetime.datetime.now().year}')],
         condition_aggressive=[
-            ('ngay_thu', f'month($) = {datetime.datetime.now().month}'),
-            ('ngay_thu', f'year($) = {datetime.datetime.now().year}')
+            ('ngay_thu', f'month($) = {datetime.now().month}'),
+            ('ngay_thu', f'year($) = {datetime.now().year}')
         ],
     )
     # print(data_tc)
@@ -1272,7 +1272,9 @@ def get_form_report():
 
 
 # test
-def add_change(data, change_name, history_name, x, lc):
+def add_change(data, change_name, change_value, x, lc):
+  for key, value in change_value.items():
+    data[key] = value
   test = list(data.values())
   test.append(datetime.now())
   test.append(change_name)
@@ -1289,18 +1291,18 @@ def execute_changeNK():
   list_nk = {x['cccd'] for x in data['modify'] + data['delete']}
   list_id = {
       x['id_ho']
-      for x in data['modify'] + data['delete']
-      if 'id_ho' in x and x['id_ho'].isdigit()
+      for x in data['modify'] + data['delete'] if 'id_ho' in x
   }
   if (len(list_nk) == 0):
     return "Không có thay đổi"
   list_nk = show(['nhan_khau'], ['*'],
-                 [('cccd', f'$ in ({",".join(list_nk)})')])
-  list_nk = {x['CCCD']: x for x in list_nk}
+                 [('cccd', f'$ in ({",".join(list_nk)})')],
+                 isLower=True)
+  list_nk = {x['cccd']: x for x in list_nk}
   if (len(list_id) > 0):
     list_id = show(['ho_gd'], ['id_ho'],
                    [('id_ho', f'$ in ({",".join(list_id)})')])
-    list_id = {x['ID_HO'] for x in list_id}
+    list_id = {str(x['id_ho']) for x in list_id}
   noteDel = ""
   stt_idx = show(['lich_su_nhan_khau'],
                  special_column_name=[(['stt'], 'max({})', 'max_stt')
@@ -1349,8 +1351,7 @@ def execute_changeNK():
     if (x['cccd'] in list_nk):
       try:
         delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
-        add_change(list_nk[x['cccd']], "Delete", "lich_su_nhan_khau", stt_idx,
-                   list_will_change)
+        add_change(list_nk[x['cccd']], "Delete", x, stt_idx, list_will_change)
       except:
         noteDel += f'-cccd {x["cccd"]} gặp vấn đề trong việc loại bỏ\n'
 
@@ -1363,20 +1364,19 @@ def execute_changeNK():
       noteAdd += f'-cccd {x["cccd"]}: không tồn tại\n'
       continue
     if ('id_ho' in x):
-      if not x['id_ho'].isdigit():
-        noteAdd += f'-cccd {x["cccd"]}: id hộ không là số nguyên\n'
-        continue
       if (x['id_ho'] not in list_id):
         noteAdd += f'-cccd {x["cccd"]}: không tồn tại id hộ {x["id_ho"]}\n'
         continue
     try:
       modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
-      add_change(list_nk[x['cccd']], "Update", "lich_su_nhan_khau", stt_idx,
-                 list_will_change)
+      print("ABC")
+      add_change(list_nk[x['cccd']], "Update", x, stt_idx, list_will_change)
+      print("abc")
     except:
       noteAdd += f'-cccd {x["cccd"]} gặp vấn đề trong việc cập nhật\n'
 
-  create('lich_su_nhan_khau', list_will_change)
+  if len(list_will_change) > 0:
+    create('lich_su_nhan_khau', list_will_change)
   response = ""
   if (noteDel != ""):
     response += "Những nhân khẩu sau đây không xóa được:\n" + noteDel
@@ -1391,11 +1391,70 @@ def execute_changeNK():
 def execute_changeHK():
   data = json.loads(request.data)
   print(data)
+  list_hk = {x['id_ho'] for x in data['modify'] + data['delete']}
+  if (len(list_hk) == 0):
+    return "Không có thay đổi"
+  list_hk = show(['ho_gd'], ['*'], [('id_ho', f'$ in ({",".join(list_hk)})')],
+                 isLower=True)
+  list_hk = {str(x['id_ho']): x for x in list_hk}
+  stt_idx = show(['lich_su_ho_gd'],
+                 special_column_name=[(['stt'], 'max({})', 'max_stt')
+                                      ])[0]['max_stt']
+
+  list_id = {
+      x['id_tai_khoan']
+      for x in data['modify'] + data['delete'] if 'id_tai_khoan' in x
+  }
+  if (len(list_id) > 0):
+    list_id = show(['tai_khoan'], ['id_tai_khoan'],
+                   [('id_tai_khoan', f'$ in ({",".join(list_id)})'),
+                    ('admin', '$ = 0')])
+    list_id = {str(x['id_tai_khoan']): x for x in list_id}
+  if (stt_idx == None):
+    stt_idx = [0]
+  else:
+    stt_idx = [int(stt_idx)]
+  list_will_change = []
+  noteDel = ""
+
   for x in data['delete']:
-    delete("ho_gd", [('id_ho', f'$ = {x["id_ho"]}')])
+    if (x['id_ho'] in list_hk):
+      try:
+        delete("ho_gd", [('id_ho', f'$ = {x["id_ho"]}')])
+        add_change(list_hk[x['id_ho']], "Delete", x, stt_idx, list_will_change)
+
+      except:
+        noteDel += f'-id hộ {x["id_ho"]} gặp vấn đề trong việc loại bỏ\n'
+
+    else:
+      noteDel += f'-id hộ {x["id_ho"]} không tồn tại\n'
+
+  noteAdd = ""
   for x in data['modify']:
-    modify("ho_gd", x.keys(), x.values(), "id_ho", x['id_ho'])
-  return "Xu li thanh cong"
+    if (x['id_ho'] not in list_hk):
+      noteAdd += f'-id hộ {x["id_ho"]}: không tồn tại\n'
+      continue
+
+    if ('id_tai_khoan' in x):
+      if (x['id_tai_khoan'] not in list_id):
+        noteAdd += f'-id hộ {x["id_ho"]}: id tài khoản {x["id_tai_khoan"]} không hợp lệ\n'
+        continue
+    try:
+      modify("ho_gd", x.keys(), x.values(), "id_ho", x['id_ho'])
+      add_change(list_hk[x['id_ho']], "Update", x, stt_idx, list_will_change)
+    except:
+      noteAdd += f'-id hộ {x["id_ho"]} gặp vấn đề trong việc cập nhật\n'
+
+  if len(list_will_change) > 0:
+    create('lich_su_ho_gd', list_will_change)
+  response = ""
+  if (noteDel != ""):
+    response += "Những hộ sau đây không xóa được:\n" + noteDel
+  if (noteAdd != ""):
+    response += "Những hộ sau đây không thay đổi được:\n" + noteAdd
+  if (response == ""):
+    response = "Thay đổi thành công"
+  return response
 
 
 @app.route("/api/TC/enhanced_mode", methods=["POST", "GET"])
