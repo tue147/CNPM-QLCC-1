@@ -2,15 +2,15 @@
 <html>
     <form action="/api/NK/{{nhankhau['func']}}/apply" method="post">
         <head>
-            <title>{{nhankhau['title']}}</title>
+            <title>{{nhankhau['form_name']}}</title>
             <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style_form_nhankhau.css') }}">
         </head>
         <body>
           <div class="form-container">
             <form id="registrationForm">
-                <h2>{{nhankhau['form_name']}}</h2>
+                <h2>{{nhankhau['title']}}</h2>
                 <label for="stt">STT:</label>
-                <input type="number" id="stt" name="stt" required value="{{nhankhau['stt']}}"><br>
+                <input type="number" id="stt" name="stt" readonly value="{{nhankhau['stt']}}"><br>
                 <label for="cccd">CCCD:</label>
                 <input type="text" id="cccd" name="CCCD" required onchange="updateFormCCCD()"><br>
                 <label for="hoTen">Họ và Tên:</label>

@@ -8,9 +8,9 @@
 <body>
     <div class="form-container">
     <form id="{{thuchi['form_name']}}">
-        <h2>Thu chi</h2>
+        <h2>{{thuchi['title']}}</h2>
         <label for="stt">STT:</label>
-        <input type="text" id="stt" name="STT" required onchange="updateFormSTT()" value="{{thuchi['stt']}}"><br>
+        <input type="text" id="stt" name="STT" onchange="updateFormSTT()" value="{{thuchi['stt']}}"><br>
         <label for="idDichVu">ID dịch vụ:</label>
         <input type="text" id="idDichVu" name="ID_DICH_VU" required onchange="updatePrice()"><br>
         <label for="tenDichVu">Tên dịch vụ:</label>
@@ -32,6 +32,12 @@
       <button type="button" onclick="setDefault()">Reset to Default</button>
   </div>  
   <script>
+    if (String({{thuchi['stt']}}) === "") {
+      document.getElementById("stt").required = true;
+    }
+    else {
+      document.getElementById("stt").readOnly = true;
+    }
     function setDefault() {
         document.getElementById('stt').value = "{{thuchi['stt']}}";
     }

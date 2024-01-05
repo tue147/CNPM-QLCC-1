@@ -787,8 +787,6 @@ def TC_update():
                              'update',
                              'form_name':
                              'Payment Form',
-                             'stt': (stt[0]['max_stt'] +
-                                     1) if stt[0]['max_stt'] else 1,
                          })
 
 
@@ -1186,7 +1184,7 @@ def RP_add():
 def RP_update():
   return render_template('form_report.html',
                          report={
-                             'title': 'Thêm Report',
+                             'title': 'Cập nhật Report',
                              'func': 'update',
                              'form_name': 'Report Form',
                              'stt': " ",
@@ -1258,12 +1256,11 @@ def get_form_report():
   data = show(['report'], ['NOI_DUNG', 'ID_TAI_KHOAN'],
               [('STT', f'$ = {stt}')])
   print(data)
-  if data[0]['id_tai_khoan'] != session['id'] or not session['admin']:
-    response = jsonify({"error": "Không có quyền truy nhập"})
-    response.status_code = 404  # Set the status code to indicate not found
-    return response
-  print(data)
   if len(data) == 1:
+    if data[0]['id_tai_khoan'] != session['id'] or not session['admin']:
+      response = jsonify({"error": "Không có quyền truy nhập"})
+      response.status_code = 404  # Set the status code to indicate not found
+      return response
     return jsonify(noiDung=data[0]['noi_dung'])
   else:
     response = jsonify({"error": "STT không tồn tại!"})
@@ -1291,7 +1288,7 @@ def execute_changeNK():
   list_nk = {x['cccd'] for x in data['modify'] + data['delete']}
   list_id = {
       x['id_ho']
-      for x in data['modify'] + data['delete'] if 'id_ho' in x
+      for x in data['modify'] + data['delete'] if 'id_ho' in x and x['id_ho']
   }
   if (len(list_nk) == 0):
     return "Không có thay đổi"
@@ -1403,7 +1400,8 @@ def execute_changeHK():
 
   list_id = {
       x['id_tai_khoan']
-      for x in data['modify'] + data['delete'] if 'id_tai_khoan' in x
+      for x in data['modify'] + data['delete']
+      if 'id_tai_khoan' in x and x['id_tai_khoan']
   }
   if (len(list_id) > 0):
     list_id = show(['tai_khoan'], ['id_tai_khoan'],

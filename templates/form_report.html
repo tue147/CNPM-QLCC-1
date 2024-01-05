@@ -7,10 +7,10 @@
 </head>
 <body>
   <div class="container">
-    <h2>Add Report</h2>
+    <h2>{{report['title']}}</h2>
       <div class="form-group">
         <label for="stt">STT</label>
-        <input type="text" id="stt" name="STT" required value="{{report['stt']}}" onchange="updateFormSTT()">
+        <input type="text" id="stt" name="STT"  value="{{report['stt']}}" onchange="updateFormSTT()">
       </div>
       <div class="form-group">
         <label for="noi_dung">Nội dung</label>
@@ -24,6 +24,13 @@
 </body>
   </div>
     <script>
+      console.log({{report['stt']}});
+      if (String({{report['stt']}}) === "") {
+        document.getElementById("stt").required = true;
+      }
+      else {
+        document.getElementById("stt").readOnly = true;
+      }
       function setDefault() {
           document.getElementById('stt').value = "{{report['stt']}}";
           document.getElementById('noiDung').value = "";

@@ -8,11 +8,11 @@
 <body>
   <div class="form-container">
     <form id="service-history-form">
-        <h2>Dịch Vụ Form</h2>
+        <h2>{{dichvu['title']}}</h2>
         <label for="stt">STT:</label>
-        <input type="number" id="stt" name="stt" required value="{{dichvu['stt']}}"><br>
+        <input type="number" id="stt" name="stt" readonly value="{{dichvu['stt']}}"><br>
         <label for="idDichVu">ID dịch vụ:</label>
-        <input type="text" id="idDichVu" name="ID_DICH_VU" required value="{{dichvu['idDichVu']}}" onchange="updateFormID_DICH_VU()"><br>
+        <input type="text" id="idDichVu" name="ID_DICH_VU" value="{{dichvu['idDichVu']}}" onchange="updateFormID_DICH_VU()"><br>
         <label for="tenDichVu">Tên dịch vụ:</label>
         <input type="text" id="tenDichVu" name="TEN_DICH_VU" required><br>
         <label for="donGia">Đơn giá:</label>
@@ -30,6 +30,12 @@
     <button type="button" onclick="setDefault()">Reset to Default</button>
   </div>
     <script>
+      if (String({{dichvu['idDichVu']}}) === "") {
+        document.getElementById("idDichVu").required = true;
+      }
+      else {
+        document.getElementById("idDichVu").readOnly = true;
+      }
       function setDefault() {
           document.getElementById('stt').value = "{{dichvu['stt']}}";
           document.getElementById('idDichVu').value = "{{dichvu['idDichVu']}}";
