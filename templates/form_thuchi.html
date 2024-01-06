@@ -32,7 +32,7 @@
       <button type="button" onclick="setDefault()">Reset to Default</button>
   </div>  
   <script>
-    if (String({{thuchi['stt']}}) === "") {
+    if (String({{thuchi["stt"]}}) === "") {
       document.getElementById("stt").required = true;
     }
     else {
@@ -46,7 +46,7 @@
         var idDichVu = document.getElementById('idDichVu').value;
         var idHo = document.getElementById('idHo').value;
         var soLuong = document.getElementById('soLuong').value;
-        if(idDichVu && idHo && soLuong) {
+        if(idDichVu && idHo) {
           fetch(`/api/getPrice?idDichVu=${idDichVu}&idHo=${idHo}&soLuong=${soLuong}`)
               .then(response => {
                   if (!response.ok) {
@@ -58,8 +58,9 @@
                   return response.json();
               })
               .then(data => {
-                  document.getElementById('giaTien').value = data.price * soLuong; // Update the price
+                  document.getElementById('giaTien').value = data.price * data.soLuong; // Update the price
                 document.getElementById('tenDichVu').value = data.name; // Update the name
+                document.getElementById('soLuong').value = data.soLuong;
                 if ("{{thuchi['func']}}"=='add'){
                   document.getElementById('stt').value = data.stt; // Update the index
                 }

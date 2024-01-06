@@ -22,6 +22,11 @@
             <option value="tuNguyen">Tự nguyện</option>
             <option value="batBuoc">Bắt buộc</option>
         </select><br>
+        <label for="tinhTheoDienTich">Tính theo diện tích:</label>
+        <select id="tinh" name="TINH">
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select><br>
         <label for="ngaySuaDoi">Ngày sửa đổi:</label>
         <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required value="{{ today }}"><br>
         </select><br>
@@ -58,6 +63,7 @@
                   document.getElementById('tenDichVu').value = data.tenDichVu;
                   document.getElementById('donGia').value = data.donGia;
                   document.getElementById('batBuoc').value = data.batBuoc;
+                  document.getElementById('tinh').value = data.tinh;
               })
               .catch(error => {
                 console.error('Error:', error);
@@ -66,6 +72,7 @@
                 document.getElementById('donGia').value = '';
                 document.getElementById('batBuoc').value = '';
                 document.getElementById('idDichVu').value = '';
+                document.getElementById('tinh').value = '';
               });
             }
       }
