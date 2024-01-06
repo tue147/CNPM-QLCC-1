@@ -198,7 +198,8 @@ def admin():
                          user={
                              'user': 'admin',
                              'USER': 'ADMIN',
-                             'data': data_tk
+                             'data': data_tk,
+                             'func': 'tài khoản'
                          })
 
 
@@ -242,7 +243,8 @@ def user():
                          user={
                              'user': 'user',
                              'USER': 'USER',
-                             'data': store
+                             'data': store,
+                             'func': 'phí'
                          })
 
 
@@ -290,6 +292,7 @@ def HK():
                                    'user': 'admin',
                                    'USER': 'HK',
                                    'data': data_hk,
+                                   'func': 'hộ khẩu'
                                })  # update for admin
       else:
         data_hk = show(['ho_gd'], ['*'],
@@ -298,7 +301,8 @@ def HK():
                                user={
                                    'user': 'user',
                                    'USER': 'HK',
-                                   'data': data_hk
+                                   'data': data_hk,
+                                   'func': 'hộ khẩu'
                                })  # update for user
   except:
     pass
@@ -525,6 +529,7 @@ def NK():
                                    'user': 'admin',
                                    'USER': 'NK',
                                    'data': data_nk,
+                                   'func': 'nhân khẩu'
                                })  # update for admin
       else:
         list_hogd = show(['ho_gd'], ['id_ho'],
@@ -542,7 +547,8 @@ def NK():
                                user={
                                    'user': 'user',
                                    'USER': 'NK',
-                                   'data': data_nk
+                                   'data': data_nk,
+                                   'func': 'nhân khẩu'
                                })  # update for user
   except:
     pass
@@ -736,7 +742,8 @@ def TC():
                              user={
                                  'user': 'admin',
                                  'USER': 'TC',
-                                 'data': data_tc
+                                 'data': data_tc,
+                                 'func': 'thu chi'
                              })  # update for admin
     else:
       list_hogd = show(['ho_gd'], ['id_ho'],
@@ -753,7 +760,8 @@ def TC():
                              user={
                                  'user': 'user',
                                  'USER': 'TC',
-                                 'data': data_tc
+                                 'data': data_tc,
+                                 'func': 'thu chi'
                              })  # update for user
   # except:
   #   pass
@@ -884,21 +892,25 @@ def get_price():
   print(data)
   print(max_stt)
   if len(data) == 1 and len(check_id_ho) == 1:
+    try:
+      if data[0]['tinh']:
+        loai_phong = show(['ho_gd'], ['LOAI_PHONG'], [('ID_HO', f'$ = {id_ho}')])
+        if len(loai_phong) == 1:
+          temp = show(['loai_phong'], ['DIEN_TICH'], [('LOAI_PHONG', f'$ = {loai_phong[0]["loai_phong"]}')])
+          if len(temp) == 1:
+            so_luong = temp[0]['dien_tich']
+            print(so_luong)
 
-    if data[0]['tinh']:
-      loai_phong = show(['ho_gd'], ['LOAI_PHONG'], [('ID_HO', f'$ = {id_ho}')])
-      if len(loai_phong) == 1:
-        temp = show(['loai_phong'], ['DIEN_TICH'], [('LOAI_PHONG', f'$ = {loai_phong[0]["loai_phong"]}')])
-        if len(temp) == 1:
-          so_luong = temp[0]['dien_tich']
-          print(so_luong)
-
-    # return jsonify(price=data[0]['total'], name=data[0]['ten_dich_vu'])
-    return jsonify(price=data[0]['don_gia'],
-                   name=data[0]['ten_dich_vu'],
-                   stt=max_stt[0]['max_stt'] + 1,
-                   soLuong = so_luong
-                   )
+      # return jsonify(price=data[0]['total'], name=data[0]['ten_dich_vu'])
+      return jsonify(price=data[0]['don_gia'],
+                    name=data[0]['ten_dich_vu'],
+                    stt=max_stt[0]['max_stt'] + 1,
+                    soLuong = so_luong
+                    )
+    except:
+      response = jsonify({"error": "Lỗi không thể truy nhập vào CSDL!"})
+      response.status_code = 404  # Set the status code to indicate not found
+      return response
   else:
     response = jsonify({"error": "Dịch vụ hoặc Hộ gia đình không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
@@ -942,7 +954,7 @@ def DV():
                                user={
                                    'user': 'admin',
                                    'USER': 'DV',
-                                   'data': data_dv
+                                   'data': data_dv,
                                })  # update for admin
       else:
         data_dv = show(['lich_su_dich_vu'], ['*'])
@@ -950,7 +962,7 @@ def DV():
                                user={
                                    'user': 'user',
                                    'USER': 'DV',
-                                   'data': data_dv
+                                   'data': data_dv,
                                })  # update for user
   except:
     pass
@@ -968,7 +980,8 @@ def DV_history():
                                user={
                                    'user': 'admin',
                                    'USER': 'DV',
-                                   'data': data_dv
+                                   'data': data_dv,
+                                   'func': 'dịch vụ'
                                })  # update for admin
       else:
         data_dv = show(['dich_vu'], ['*'])
@@ -976,7 +989,8 @@ def DV_history():
                                user={
                                    'user': 'user',
                                    'USER': 'DV',
-                                   'data': data_dv
+                                   'data': data_dv,
+                                   'func': 'dịch vụ'
                                })  # update for user
   except:
     pass
@@ -1185,7 +1199,8 @@ def RP():
                                user={
                                    'user': 'admin',
                                    'USER': 'RP',
-                                   'data': data_rp
+                                   'data': data_rp,
+                                   'func': 'report'
                                })  # update for admin
       else:
         data_rp = show(['report'], ['*'],
@@ -1194,7 +1209,8 @@ def RP():
                                user={
                                    'user': 'user',
                                    'USER': 'RP',
-                                   'data': data_rp
+                                   'data': data_rp,
+                                   'func': 'report'
                                })  # update for user
   except:
     pass
