@@ -141,6 +141,7 @@
       đổi cách lấy giá trị txtValue
       Sửa đường link fetch và code main.py
     */
+  if (String("{{user['user']}}") === "admin") {
     var counter = 0;
     var number_column = 0;
     const list_type = ["", "", "date", "", "", ""];
@@ -329,4 +330,8 @@
     document.body.addEventListener("keydown", (event) => {
       if (event.key === "F2") console.log(extract_data());
     });*/
+  }
+  else {
+    $("#changeMode").remove();
+  }
 </script>

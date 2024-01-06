@@ -123,6 +123,7 @@
           }
       }
     // test
+  if (String("{{user['user']}}") === "admin") {
     var counter = 0;
     var number_column = 0;
     const list_type = ["", "", "", "", ""];
@@ -311,6 +312,10 @@
     document.body.addEventListener("keydown", (event) => {
       if (event.key === "F2") console.log(extract_data());
     });*/
+  }
+  else {
+    $("#changeMode").remove();
+  }
   </script>
 
 </div>
