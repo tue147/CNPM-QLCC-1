@@ -141,7 +141,6 @@
       đổi cách lấy giá trị txtValue
       Sửa đường link fetch và code main.py
     */
-  if (String("{{user['user']}}") === "admin") {
     var counter = 0;
     var number_column = 0;
     const list_type = ["", "", "date", "", "", ""];
@@ -166,11 +165,6 @@
           FilterRemaster();
         });
       }
-      $("#changeMode").click(function() {
-        [this.name, this.textContent] = [this.textContent, this.name];
-        $(this).toggleClass("btn-success");
-        changeMode();
-      });
       function FilterRemaster() {
         var table = document.getElementById("dataTable");
         var tr = table.getElementsByTagName("tr");
@@ -205,6 +199,12 @@
         }
       }
     }
+  if (String("{{user['user']}}") === "admin") {
+    $("#changeMode").click(function() {
+      [this.name, this.textContent] = [this.textContent, this.name];
+      $(this).toggleClass("btn-success");
+      changeMode();
+    });
     const extract_data = function () {
       let position = ["cccd", "ho_ten", "ngay_sinh", "quan_he", "tinh_trang_cu_tru", "id_ho"];
       let primary = "cccd";
