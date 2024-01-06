@@ -13,6 +13,7 @@
             <div class="card-header py-3">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h6 class="m-0 font-weight-bold text-primary">Quản lý Thu Chi</h6>
+                  <button type="button" class="btn btn-primary" name="Chưa thu" id="changeMode">Đã Thu</button>
               </div>
             </div>
             <div class="card-body">
@@ -56,9 +57,9 @@
                 <script>
                   // Example data from the database   
                   var expenseData = JSON.parse('{{ user["data"] | tojson | safe }}');
-
+                  var dataTable = ["", ""];
+                  var currentData = 0;
                   function insertDataToTable(data) {
-                    var dataTableBody = document.getElementById('dataTableBody');
                     data.forEach(function(item) {
                         var row = `<tr>
                             <td>${item.STT}</td>
@@ -69,12 +70,13 @@
                             <td>${item.DA_THU}</td>
                             <td>${item.ngay_thu}</td>
                         </tr>`;
-                        dataTableBody.innerHTML += row;
+                        console.log(item);
+                        dataTable[item.GIA_TIEN === item.DA_THU ? 0 : 1] += row;
                     });
                   }
-
                   // Call this function when you've retrieved your data from the database
                   insertDataToTable(expenseData);
+                  $("#dataTableBody").html(dataTable[currentData]);
                   </script>
             </div>
         </div>
@@ -151,8 +153,9 @@
       }
       $("#changeMode").click(function() {
         [this.name, this.textContent] = [this.textContent, this.name];
-        $(this).toggleClass("btn-success");
-        changeMode();
+        currentData ^= 1;
+        $("#dataTableBody").html(dataTable[currentData]);
+        FilterRemaster();
       });
       function FilterRemaster() {
         var table = document.getElementById("dataTable");
