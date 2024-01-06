@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Enabled",
+                "ssl": {}
+            },
+            "previewLimit": 50,
+            "server": "cnpm-ittn.mysql.database.azure.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "CNPM",
+            "database": "mydb",
+            "username": "tuecm",
+            "password": "12345cmt#"
+        }
+    ]
+}

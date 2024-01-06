@@ -869,12 +869,13 @@ def TC_apply(func):
 def get_price():
   id_dich_vu = request.args.get('idDichVu')
   id_ho = request.args.get('idHo')
+  so_luong = request.args.get('soLuong')
   print(id_dich_vu)
   # data = show(['dich_vu', 'thu_chi'], ['don_gia', 'ten_dich_vu'],
   #             [('ID_DICH_VU', f'$ = {id_dich_vu}')],
   #             special_column_name=[(['so_luong',
   #                                    'gia_tien'], "{} * {}", "total")])
-  data = show(['dich_vu'], ['don_gia', 'ten_dich_vu'],
+  data = show(['dich_vu'], ['don_gia', 'ten_dich_vu', 'tinh'],
               [('ID_DICH_VU', f'$ = {id_dich_vu}')])
   max_stt = show(table_name=["thu_chi"],
                  special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -883,10 +884,21 @@ def get_price():
   print(data)
   print(max_stt)
   if len(data) == 1 and len(check_id_ho) == 1:
+
+    if data[0]['tinh']:
+      loai_phong = show(['ho_gd'], ['LOAI_PHONG'], [('ID_HO', f'$ = {id_ho}')])
+      if len(loai_phong) == 1:
+        temp = show(['loai_phong'], ['DIEN_TICH'], [('LOAI_PHONG', f'$ = {loai_phong[0]["loai_phong"]}')])
+        if len(temp) == 1:
+          so_luong = temp[0]['dien_tich']
+          print(so_luong)
+
     # return jsonify(price=data[0]['total'], name=data[0]['ten_dich_vu'])
     return jsonify(price=data[0]['don_gia'],
                    name=data[0]['ten_dich_vu'],
-                   stt=max_stt[0]['max_stt'] + 1)
+                   stt=max_stt[0]['max_stt'] + 1,
+                   soLuong = so_luong
+                   )
   else:
     response = jsonify({"error": "Dịch vụ hoặc Hộ gia đình không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
@@ -1040,7 +1052,7 @@ def DV_apply(func):
     print(data)
     values = [data.get(key) for key in data]
     values = [
-        0 if item == 'tuNguyen' else 1 if item == 'batBuoc' else item
+        0 if item == 'tuNguyen' or item == 'No' else 1 if item == 'batBuoc' or item=='Yes' else item
         for item in values
     ]
     values.append("Add")
@@ -1049,6 +1061,9 @@ def DV_apply(func):
     values_without_history.pop()  # remove date
     values_without_history.remove(values_without_history[0])  # remove stt
     #   values.append('test')
+    temp = values[-3]    # swaping 'add' and field: TINH
+    values.pop(-3)
+    values.append(temp)
     print(values)
     print(values_without_history)
     try:
@@ -1068,12 +1083,20 @@ def DV_apply(func):
       data['BAT_BUOC'] = 1
     else:
       data['BAT_BUOC'] = 0
+    # check tinh theo dien tich
+    if data['TINH'] == 'Yes':
+      data['TINH'] = 1
+    else:
+      data['TINH'] = 0
     data_without_history = data.copy()
     del data_without_history['NGAY_SUA_DOI']
     del data_without_history['LOAI_SUA_DOI']
     del data_without_history['stt']
     del data_without_history['ID_DICH_VU']
     values = [data.get(key) for key in data]
+    temp = values[-3]    # swaping 'add' and field: TINH
+    values.pop(-3)
+    values.append(temp)
     print(data)
     print(data_without_history)
     find_dich_vu = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
@@ -1104,8 +1127,8 @@ def DV_apply(func):
       delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
       values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
                 find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
-                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'], time,
-                "Delete"]
+                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'],
+                find_service[0]['TINH'],time,"Delete"]
       create('lich_su_dich_vu', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
@@ -1126,10 +1149,15 @@ def get_form_id_dich_vu():
       data[0]['BAT_BUOC'] = 'tuNguyen'
     else:
       data[0]['BAT_BUOC'] = 'batBuoc'
+    if data[0]['TINH'] == 0:
+      data[0]['TINH'] = 'No'
+    else:
+      data[0]['TINH'] = 'Yes'
     print(data)
     return jsonify(tenDichVu=data[0]['TEN_DICH_VU'],
                    donGia=data[0]['don_gia'],
-                   batBuoc=data[0]['BAT_BUOC'])
+                   batBuoc=data[0]['BAT_BUOC'],
+                   tinh=data[0]['TINH'])
   else:
     response = jsonify({"error": "ID dịch vụ không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found

@@ -21,6 +21,7 @@
                             <option value="tenDichVu">Tên Dịch Vụ</option>
                             <option value="donGia">Đơn Giá</option>
                             <option value="batBuoc">Bắt Buộc</option>
+                            <option value="tinh">Tính theo diện tích</option>
                         </select>
                     </div>
                     <!-- Ô tìm kiếm -->
@@ -36,6 +37,7 @@
                                   <th>Tên Dịch Vụ</th>
                                   <th>Đơn Giá</th>
                                   <th>Bắt Buộc</th>
+                                  <th>Tính theo diện tích</th>
                               </tr>
                           </thead>
                           <tbody id="tableBody">
@@ -56,6 +58,7 @@
                               <td>${item.TEN_DICH_VU}</td>
                               <td>${item.don_gia}</td>
                               <td>${item.BAT_BUOC}</td>
+                              <td>${item.TINH}</td>
                           </tr>`;
                           tableBody.innerHTML += row;
                       });
@@ -109,6 +112,8 @@
                   return 2;
               case "batBuoc":
                   return 3;
+              case "tinh":
+                  return 4;
               default:
                   return 0;
           }

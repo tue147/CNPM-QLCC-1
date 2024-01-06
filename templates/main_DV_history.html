@@ -21,6 +21,7 @@
                             <option value="tenDichVu">Tên Dịch Vụ</option>
                             <option value="donGia">Đơn Giá</option>
                             <option value="batBuoc">Bắt Buộc</option>
+                            <option value="tinh">Tính theo diện tích</option>
                             <option value="ngaySuaDoi">Ngày Sửa Đổi</option>
                             <option value="loaiSuaDoi">Loại Sửa Đổi</option>
                         </select>
@@ -39,6 +40,7 @@
                                   <th>Tên Dịch Vụ</th>
                                   <th>Đơn Giá</th>
                                   <th>Bắt Buộc</th>
+                                  <th>Tính theo diện tích</th>
                                   <th>Ngày Sửa Đổi</th>
                                   <th>Loại Sửa Đổi</th>
                               </tr>
@@ -62,6 +64,7 @@
                               <td>${item.TEN_DICH_VU}</td>
                               <td>${item.don_gia}</td>
                               <td>${item.BAT_BUOC}</td>
+                              <td>${item.TINH}</td>
                               <td>${item.NGAY_SUA_DOI}</td>
                               <td>${item.LOAI_SUA_DOI}</td>
                           </tr>`;
@@ -119,10 +122,12 @@
                   return 3;
               case "batBuoc":
                   return 4;
+              case "tinh":
+                  return 4;
               case "ngaySuaDoi":
-                  return 5;
-              case "loaiSuaDoi":
                   return 6;
+              case "loaiSuaDoi":
+                  return 7;
               default:
                   return 0;
           }
