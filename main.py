@@ -237,7 +237,7 @@ def user():
         for dic in store:
           if dic['ID_DICH_VU'] == data['id_dich_vu']:
             dic['CAN_PHAI_DONG'] = data["gia_tien"] - data["da_thu"]
-    print(store)
+    # print(store)
   return render_template('user.html',
                          user={
                              'user': 'user',
@@ -310,6 +310,7 @@ def HK_add():
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_hokhau.html',
                          hokhau={
                              'title':
@@ -320,7 +321,7 @@ def HK_add():
                              'Household Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/HK/update')
@@ -328,6 +329,7 @@ def HK_update():
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_hokhau.html',
                          hokhau={
                              'title':
@@ -338,18 +340,19 @@ def HK_update():
                              'Household Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/HK/delete')
 def HK_delete():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa Hộ Khẩu',
                              'class': 'api/HK',
                              'name': 'ID Hộ',
                              'label': 'ID Hộ'
-                         })
+                         }, today = today)
 
 
 @app.route('/api/HK/<func>/apply', methods=['post'])
@@ -552,6 +555,7 @@ def NK_add():
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_nhankhau.html',
                          nhankhau={
                              'title':
@@ -562,7 +566,7 @@ def NK_add():
                              'Resident Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/NK/update')
@@ -571,6 +575,7 @@ def NK_update():
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_nhankhau.html',
                          nhankhau={
                              'title':
@@ -581,18 +586,19 @@ def NK_update():
                              'Resident Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/NK/delete')
 def NK_delete():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa Nhân Khẩu',
                              'class': 'api/NK',
                              'name': 'CCCD',
                              'label': 'CCCD'
-                         })
+                         }, today = today)
 
 
 @app.route('/api/NK/<func>/apply', methods=['post'])
@@ -704,7 +710,7 @@ def get_form_CCCD():
                    tinhTrangCuTru=data[0]['TINH_TRANG_CU_TRU'],
                    idHo=data[0]['ID_HO'])
   else:
-    response = jsonify({"error": "ID Hộ không tồn tại!"})
+    response = jsonify({"error": "CCCD không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
     return response
 
@@ -760,6 +766,7 @@ def TC_add():
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_thuchi.html',
                          thuchi={
                              'title':
@@ -770,7 +777,7 @@ def TC_add():
                              'Payment Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/TC/update')
@@ -779,6 +786,7 @@ def TC_update():
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_thuchi.html',
                          thuchi={
                              'title':
@@ -787,18 +795,19 @@ def TC_update():
                              'update',
                              'form_name':
                              'Payment Form',
-                         })
+                         }, today = today)
 
 
 @app.route('/api/TC/delete')
 def TC_delete():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa Khoản Thu',
                              'class': 'api/TC',
                              'name': 'STT',
                              'label': 'STT'
-                         })
+                         }, today = today)
 
 
 @app.route('/api/TC/<func>/apply', methods=['post'])
@@ -973,6 +982,7 @@ def DV_add():
                                           "max_iddv")],
                     column_name=[None])
   print(id_dich_vu)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template(
       'form_dichvu.html',
       dichvu={
@@ -985,7 +995,7 @@ def DV_add():
           'stt': (stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
           'idDichVu':
           (id_dich_vu[0]['max_iddv'] + 1) if id_dich_vu[0]['max_iddv'] else 1,
-      })
+      }, today = today)
 
 
 @app.route('/api/DV/update')
@@ -993,6 +1003,7 @@ def DV_update():
   stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
+  today = datetime.now().strftime('%Y-%m-%d')
   print(stt)
   return render_template('form_dichvu.html',
                          dichvu={
@@ -1004,18 +1015,19 @@ def DV_update():
                              'Service Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/DV/delete')
 def DV_delete():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa Dịch Vụ',
                              'class': 'api/DV',
                              'name': 'ID_DICH_VU',
                              'label': 'ID_DICH_VU'
-                         })
+                         }, today = today)
 
 
 @app.route('/api/DV/<func>/apply', methods=['post'])
@@ -1167,6 +1179,7 @@ def RP_add():
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
   print(stt)
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_report.html',
                          report={
                              'title':
@@ -1177,29 +1190,31 @@ def RP_add():
                              'Report Form',
                              'stt': (stt[0]['max_stt'] +
                                      1) if stt[0]['max_stt'] else 1,
-                         })
+                         }, today = today)
 
 
 @app.route('/api/RP/update')
 def RP_update():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_report.html',
                          report={
                              'title': 'Cập nhật Report',
                              'func': 'update',
                              'form_name': 'Report Form',
                              'stt': " ",
-                         })
+                         }, today = today)
 
 
 @app.route('/api/RP/delete')
 def RP_delete():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa Report',
                              'class': 'api/RP',
                              'name': 'STT',
                              'label': 'STT'
-                         })
+                         }, today = today)
 
 
 @app.route('/api/RP/<func>/apply', methods=['post'])

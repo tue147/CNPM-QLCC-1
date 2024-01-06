@@ -25,7 +25,7 @@
                 <option value="deluxe">Deluxe</option>
             </select><br>
             <label for="ngaySuaDoi">Ngày sửa đổi:</label>
-            <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required><br>
+            <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required value="{{ today }}"><br>
             <button type="submit">Submit</button>
         </form>
         <button type="button" onclick="setDefault()">Reset to Default</button>
@@ -34,6 +34,7 @@
       <script>
         function setDefault() {
             document.getElementById('stt').value = "{{hokhau['stt']}}";
+            document.getElementById('ngaySuaDoi').value = "{{ today }}";
         }
         function updateFormID_HO() {
           if ("{{hokhau['func']}}"=='update'){
@@ -41,7 +42,10 @@
             fetch(`/api/getFormID_HO?idHo=${idHo}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('ID Hộ không tồn tại!');
+                      return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
                     }
                     return response.json();
                 })

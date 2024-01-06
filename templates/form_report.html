@@ -16,7 +16,7 @@
         <label for="noi_dung">Nội dung</label>
         <textarea id="noiDung" name="NOI_DUNG" required></textarea>
         <label for="ngay">Ngày sửa đổi:</label>
-        <input type="date" id="ngay" name="NGAY" required><br>
+        <input type="date" id="ngay" name="NGAY" required value="{{ today }}"><br>
       </div>
       <input type="submit" value="Submit" style="width:20%;">
   <button type="button" onclick="setDefault()" style="border-radius:4px; padding: 10px 20px;">Reset</button>
@@ -34,6 +34,7 @@
       function setDefault() {
           document.getElementById('stt').value = "{{report['stt']}}";
           document.getElementById('noiDung').value = "";
+          document.getElementById('ngay').value = "{{ today }}";
       }
       function updateFormSTT() {
         if ("{{report['func']}}"=='update'){
@@ -41,7 +42,10 @@
           fetch(`/api/getFormREPORT?stt=${stt}`)
               .then(response => {
                   if (!response.ok) {
-                      throw new Error("STT không tồn tại hoặc không có quyền truy nhập");
+                    return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
                   }
                   return response.json();
               })
