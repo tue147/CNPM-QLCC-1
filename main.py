@@ -523,7 +523,7 @@ def NK():
       if session['admin']:
         data_nk = show(['nhan_khau'], ['*'])
         for x in data_nk:
-          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat()
+          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat() if x['NGAY_SINH'] else None
         return render_template('main_nhankhau.html',
                                user={
                                    'user': 'admin',
@@ -738,6 +738,8 @@ def TC():
     if session['admin']:
       data_tc = show(['thu_chi'], ['*'])
       print(data_tc)
+      for x in data_tc:
+        x['ngay_thu'] = x['ngay_thu'].isoformat() if x['ngay_thu'] else None
       return render_template('main_thuchi.html',
                              user={
                                  'user': 'admin',
@@ -756,6 +758,8 @@ def TC():
                 ('ID_HO',
                  f'$ = {",".join([str(x["id_ho"]) for x in list_hogd])}')
             ])
+        for x in data_tc:
+          x['ngay_thu'] = x['ngay_thu'].isoformat() if x['ngay_thu'] else None
       return render_template('main_thuchi.html',
                              user={
                                  'user': 'user',
