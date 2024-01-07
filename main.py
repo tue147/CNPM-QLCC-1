@@ -98,13 +98,14 @@ def update_account():
 
 @app.route('/ADMIN/delete')
 def delete_account():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa tài khoản',
                              'class': 'ADMIN',
                              'name': 'ID_TAI_KHOAN',
-                             'label': 'ID tài khoản'
-                         })
+                             'label': 'ID tài khoản',
+                         }, today=today)
 
 
 @app.route('/ADMIN/<func>/apply', methods=['POST'])
@@ -729,12 +730,13 @@ Thu chi
 
 @app.route('/api/TC/history')
 def TC_history():
-  return render_template('main_TC_unpaid.html',
-                          user={
-                              'user': 'admin',
-                              'USER': 'TC',
-                              'data': [],
-                          })  # update for admin
+  if 'id' in session:
+    return render_template('main_TC_unpaid.html',
+                            user={
+                                'user': 'admin',
+                                'USER': 'TC',
+                                'data': [],
+                            })  # update for admin
 
 
 @app.route('/api/TC')
@@ -782,7 +784,13 @@ def chech_unpaid():
   month = request.args.get('month')
   year = request.args.get('year')
   day = 31
-  id_ho = show(['ho_gd'], ['ID_HO'])   # lay tong id ho
+  id_ho = [{}]
+  if "id" in session:
+    if session['admin']:
+      id_ho = show(['ho_gd'], ['ID_HO'])   # lay tong id ho
+    else:
+      id_ho = show(['ho_gd'], ['ID_HO'], conditions=[('id_tai_khoan', f'$ = {session["id"]}')])  # id_ho theo tai khoan
+
   id_ho_lich_su = show(['lich_su_ho_gd'], ['ID_HO'], [
     ("NGAY_SUA_DOI", f"$ <= \'{date(int(year), int(month), day).isoformat()}\'"),
     ("LOAI_SUA_DOI", f"($ like \'Add\' or $ like \'ADD\' or $ like \'add\')")
@@ -1021,7 +1029,7 @@ Dich Vu
 
 
 @app.route('/api/DV/history')
-def DV():
+def DV_history():
   try:
     if 'id' in session:
       if session['admin']:
@@ -1047,30 +1055,30 @@ def DV():
 
 
 @app.route('/api/DV')
-def DV_history():
-  # try:
-  if 'id' in session:
-    if session['admin']:
-      data_dv = show(['dich_vu'], ['*'])
-      print(data_dv)
-      return render_template('main_dichvu.html',
-                              user={
-                                  'user': 'admin',
-                                  'USER': 'DV',
-                                  'data': data_dv,
-                                  'func': 'dịch vụ'
-                              })  # update for admin
-    else:
-      data_dv = show(['dich_vu'], ['*'])
-      return render_template('main_dichvu.html',
-                              user={
-                                  'user': 'user',
-                                  'USER': 'DV',
-                                  'data': data_dv,
-                                  'func': 'dịch vụ'
-                              })  # update for user
-  # except:
-  #   pass
+def DV():
+  try:
+    if 'id' in session:
+      if session['admin']:
+        data_dv = show(['dich_vu'], ['*'])
+        print(data_dv)
+        return render_template('main_dichvu.html',
+                                user={
+                                    'user': 'admin',
+                                    'USER': 'DV',
+                                    'data': data_dv,
+                                    'func': 'dịch vụ'
+                                })  # update for admin
+      else:
+        data_dv = show(['dich_vu'], ['*'])
+        return render_template('main_dichvu.html',
+                                user={
+                                    'user': 'user',
+                                    'USER': 'DV',
+                                    'data': data_dv,
+                                    'func': 'dịch vụ'
+                                })  # update for user
+  except:
+    pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
