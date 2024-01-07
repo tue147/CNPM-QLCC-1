@@ -1,16 +1,30 @@
 import mysql.connector
+from mysql.connector import Error
 import timeit
 """
 require: mysql-connector-python
 """
+def connect_db():
+  try:
+    mydb = mysql.connector.connect(host="cnpm-ittn.mysql.database.azure.com",
+                                user="tuecm",
+                                password="12345cmt#",
+                                database="mydb")
+    print(mydb)
+    return mydb
+  except Error as e:
+    print("Error while connecting to MySQL", e)
+    return None
 
-mydb = mysql.connector.connect(host="cnpm-ittn.mysql.database.azure.com",
-                               user="tuecm",
-                               password="12345cmt#",
-                               database="mydb")
-
-print(mydb)
-
+def close_connection(mydb, cursor):
+    try:
+      cursor.close()
+      mydb.close()
+      print("Failed to reconnect to the database")
+    except Error as e:
+      print("Error while connecting to MySQL or fetching data", e)
+  
+mydb = connect_db()
 cursor = mydb.cursor()
 cursor.execute("show tables")
 col_info = {}

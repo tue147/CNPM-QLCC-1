@@ -4,6 +4,7 @@ import random
 import json
 import datetime
 from datetime import datetime
+from datetime import date
 
 app = Flask(__name__,
             static_url_path='',
@@ -728,7 +729,12 @@ Thu chi
 
 @app.route('/api/TC/history')
 def TC_history():
-  return redirect('/api/TC')
+  return render_template('main_TC_unpaid.html',
+                          user={
+                              'user': 'admin',
+                              'USER': 'TC',
+                              'data': [],
+                          })  # update for admin
 
 
 @app.route('/api/TC')
@@ -771,6 +777,73 @@ def TC():
   #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
+@app.route('/api/checkUnPaid')
+def chech_unpaid():
+  month = request.args.get('month')
+  year = request.args.get('year')
+  day = 31
+  id_ho = show(['ho_gd'], ['ID_HO'])   # lay tong id ho
+  id_ho_lich_su = show(['lich_su_ho_gd'], ['ID_HO'], [
+    ("NGAY_SUA_DOI", f"$ <= \'{date(int(year), int(month), day).isoformat()}\'"),
+    ("LOAI_SUA_DOI", f"($ like \'Add\' or $ like \'ADD\' or $ like \'add\')")
+  ])
+  print(id_ho_lich_su)
+
+  def intersection(lst1, lst2):
+    temp1 = [x['id_ho'] for x in lst1]
+    temp2 = [x['id_ho'] for x in lst2]
+    return list(set(temp1) & set(temp2))
+  id_ho = intersection(id_ho, id_ho_lich_su)
+  print(id_ho)
+  if len(id_ho) == 0:
+    response = jsonify({"error": "Không có hộ gia đình nào!"})
+    response.status_code = 404
+    return response
+
+  phi = show(['dich_vu'], ['ID_DICH_VU', 'TEN_DICH_VU'],    # lay cac loai phi bat buoc
+               [('BAT_BUOC', '$ = 1')])
+  if len(phi) == 0:
+    response = jsonify({"error": "Không có phí bắt buộc nào!"})
+    response.status_code = 404
+    return response
+  
+  data_tc = show(   # tong data ngay thu chi theo thang va nam
+      ['thu_chi', 'dich_vu'],
+      ['ID_DICH_VU', 'TEN_DICH_VU', 'ID_HO' , 'GIA_TIEN', 'DA_THU', 'ngay_thu'],
+      conditions=[
+          ('id_dich_vu',
+            f'$ in ({",".join([str(x["id_dich_vu"]) for x in phi])})'),
+      ],
+      condition_aggressive=[
+          ('ngay_thu', f'month($) = {month}'),
+          ('ngay_thu', f'year($) = {year}')
+      ],
+  )
+  # print(data_tc)
+  
+  store = []
+  for i in range(len(id_ho)): 
+    ho_gd = id_ho[i]
+    store += [{
+        "ID_DICH_VU": k['id_dich_vu'],
+        "TEN_DICH_VU": k['ten_dich_vu'],
+        "ID_HO": ho_gd,
+        "CAN_PHAI_DONG": "Chưa đóng",
+        "ngay": f"{year}-{month}"
+    } for k in phi]
+  # print(store)
+
+  for data in data_tc:
+    if (data['gia_tien'] > data['da_thu']):
+      for dic in store:
+        if dic['ID_HO'] == data['id_ho'] and dic['ID_DICH_VU'] == data['id_dich_vu']:
+          dic['CAN_PHAI_DONG'] = data["gia_tien"] - data["da_thu"]
+    elif (data['gia_tien'] == data['da_thu']):
+      for dic in store:
+        if dic['ID_HO'] == data['id_ho'] and dic['ID_DICH_VU'] == data['id_dich_vu']:
+          del dic
+  # print(store)
+  return jsonify(data = store)
 
 @app.route('/api/TC/add')
 def TC_add():
@@ -975,29 +1048,29 @@ def DV():
 
 @app.route('/api/DV')
 def DV_history():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_dv = show(['dich_vu'], ['*'])
-        print(data_dv)
-        return render_template('main_dichvu.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'DV',
-                                   'data': data_dv,
-                                   'func': 'dịch vụ'
-                               })  # update for admin
-      else:
-        data_dv = show(['dich_vu'], ['*'])
-        return render_template('main_dichvu.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'DV',
-                                   'data': data_dv,
-                                   'func': 'dịch vụ'
-                               })  # update for user
-  except:
-    pass
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_dv = show(['dich_vu'], ['*'])
+      print(data_dv)
+      return render_template('main_dichvu.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'DV',
+                                  'data': data_dv,
+                                  'func': 'dịch vụ'
+                              })  # update for admin
+    else:
+      data_dv = show(['dich_vu'], ['*'])
+      return render_template('main_dichvu.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'DV',
+                                  'data': data_dv,
+                                  'func': 'dịch vụ'
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 

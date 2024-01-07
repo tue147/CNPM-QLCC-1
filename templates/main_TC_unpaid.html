@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% set user_design = 'main_design/' ~ user['user'] ~ '_design.html' %}
-  {% include user_design %}
+    {% include 'main_design/history_design.html' %}
 
 
 
@@ -12,8 +11,11 @@
         <div class="card shadow mb-4">
             <div class="card-header py-3">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <h6 class="m-0 font-weight-bold text-primary">Quản lý Thu Chi</h6>
-                  <!-- <button type="button" class="btn btn-primary" name="Chưa thu" id="changeMode">Đã Thu</button> -->
+                  <h6 class="m-0 font-weight-bold text-primary">Quản lý Phí chưa đóng</h6>
+                  <div class="form-container">
+                    <input type="number" id="month" class="form-ngay" onchange="checkUnPaid()" placeholder="Tháng">
+                    <input type="number" id="year" class="form-ngay" onchange="checkUnPaid()" placeholder="Năm">
+                  </div>
               </div>
             </div>
             <div class="card-body">
@@ -22,13 +24,11 @@
                     <div class="col-md-4">
                         <select class="form-control" id="incomeExpenseFilterSelect">
                             <option value="all">Tất cả</option>
-                            <option value="STT">Số thứ tự</option>
                             <option value="ID_DICH_VU">ID dịch vụ</option>
+                            <option value="TEN_DICH_VU">Tên dịch vụ</option>
                             <option value="ID_HO">ID hộ</option>
-                            <option value="SO_LUONG">Số lượng</option>
-                            <option value="GIA_TIEN">Giá tiền</option>
-                            <option value="DA_THU">Đã thu</option>
-                            <option value="ngay_thu">Ngày thu</option>
+                            <option value="CAN_PHAI_DONG">Cần phải đóng</option>
+                            <option value="ngay">Ngày</option>
                         </select>
                     </div>
                     <!-- Ô tìm kiếm -->
@@ -40,13 +40,11 @@
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                         <thead>
                             <tr>
-                                <th>Số thứ tự</th>
                                 <th>ID dịch vụ</th>
+                                <th>Tên dịch vụ</th>
                                 <th>ID hộ</th>
-                                <th>Số lượng</th>
-                                <th>Giá tiền</th>
-                                <th>Đã thu</th>
-                                <th>Ngày thu</th>
+                                <th>Cần phải đóng</th>
+                                <th>Ngày</th>
                             </tr>
                         </thead>
                         <tbody id="dataTableBody">
@@ -57,28 +55,26 @@
                 <script>
                   // Example data from the database   
                   var expenseData = JSON.parse('{{ user["data"] | tojson | safe }}');
-                  // var dataTable = ["", ""];
-                  // var currentData = 0;
                   function insertDataToTable(data) {
                     var dataTableBody = document.getElementById('dataTableBody');
                     data.forEach(function(item) {
                         var row = `<tr>
-                            <td>${item.STT}</td>
                             <td>${item.ID_DICH_VU}</td>
+                            <td>${item.TEN_DICH_VU}</td>
                             <td>${item.ID_HO}</td>
-                            <td>${item.SO_LUONG}</td>
-                            <td>${item.GIA_TIEN}</td>
-                            <td>${item.DA_THU}</td>
-                            <td>${item.ngay_thu}</td>
+                            <td>${item.CAN_PHAI_DONG}</td>
+                            <td>${item.ngay}</td>
                         </tr>`;
-                        // console.log(item);
-                        // dataTable[item.GIA_TIEN > item.DA_THU ? 0 : 1] += row;
                         dataTableBody.innerHTML += row;
                     });
                   }
+
+                  function deleteDataFromTable() {
+                    var dataTableBody = document.getElementById('dataTableBody');
+                    dataTableBody.innerHTML = '';
+                }
                   // Call this function when you've retrieved your data from the database
                   insertDataToTable(expenseData);
-                  // $("#dataTableBody").html(dataTable[currentData]);
                   </script>
             </div>
         </div>
@@ -120,24 +116,48 @@
 
     function getColumnIndex(filterValue) {
         switch (filterValue) {
-            case "STT":
-                return 0;
             case "ID_DICH_VU":
+                return 0;
+            case "TEN_DICH_VU":
                 return 1;
             case "ID_HO":
                 return 2;
-            case "SO_LUONG":
-                return 3;
-            case "GIA_TIEN":
+            case "CAN_PHAI_DONG":
                 return 4;
-            case "DA_THU":
+            case "ngay":
                 return 5;
-            case "ngay_thu":
-                return 6;
             default:
                 return 0;
         }
     }
+
+    function checkUnPaid() {
+        var month = document.getElementById('month').value;
+        var year = document.getElementById('year').value;
+        if (month && year){
+            fetch(`/api/checkUnPaid?year=${year}&month=${month}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                                                        // Throw an error with the message from your Flask application
+                                                        throw new Error(errorData.error);
+                                                    });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    deleteDataFromTable()
+                    insertDataToTable(data.data); // Update the price
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                    document.getElementById('month').value = '';
+                    document.getElementById('year').value = '';
+                });
+        }
+    }
+
 
     {
       var  tableHead = document.getElementById("dataTable").getElementsByTagName('thead')[0];
@@ -153,12 +173,6 @@
           FilterRemaster();
         });
       }
-      // $("#changeMode").click(function() {
-      //   [this.name, this.textContent] = [this.textContent, this.name];
-      //   currentData ^= 1;
-      //   $("#dataTableBody").html(dataTable[currentData]);
-      //   FilterRemaster();
-      // });
       function FilterRemaster() {
         var table = document.getElementById("dataTable");
         var tr = table.getElementsByTagName("tr");
