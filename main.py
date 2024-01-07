@@ -888,7 +888,7 @@ def get_price():
   #             special_column_name=[(['so_luong',
   #                                    'gia_tien'], "{} * {}", "total")])
   data = show(['dich_vu'], ['don_gia', 'ten_dich_vu', 'tinh'],
-              [('ID_DICH_VU', f'$ = {id_dich_vu}')])
+              [('ID_DICH_VU', f'$ = {id_dich_vu}'), ('HIEN_HANH', '$ = 1')])
   max_stt = show(table_name=["thu_chi"],
                  special_column_name=[(['stt'], "max({})", "max_stt")],
                  column_name=[None])
@@ -1074,7 +1074,7 @@ def DV_apply(func):
         for item in values
     ]
     values.append("Add")
-    values_without_history = values.copy()
+    """values_without_history = values.copy()
     values_without_history.pop()  # remove type
     values_without_history.pop()  # remove date
     values_without_history.remove(values_without_history[0])  # remove stt
@@ -1083,7 +1083,11 @@ def DV_apply(func):
     values.pop(-3)
     values.append(temp)
     print(values)
-    print(values_without_history)
+    print(values_without_history)"""
+    values_without_history = values.copy()
+    values_without_history = values_without_history[1:7]
+    values[-4:] = values[-2:]+values[-4:-3]
+    print(values, values_without_history)
     try:
       create('dich_vu', [tuple(values_without_history)])
       create('lich_su_dich_vu', [tuple(values)])
@@ -1106,15 +1110,17 @@ def DV_apply(func):
       data['TINH'] = 1
     else:
       data['TINH'] = 0
+    if data['HIEN_HANH'] == 'Yes':
+      data['HIEN_HANH'] = 1
+    else:
+      data['HIEN_HANH'] = 0
     data_without_history = data.copy()
     del data_without_history['NGAY_SUA_DOI']
     del data_without_history['LOAI_SUA_DOI']
     del data_without_history['stt']
     del data_without_history['ID_DICH_VU']
     values = [data.get(key) for key in data]
-    temp = values[-3]    # swaping 'add' and field: TINH
-    values.pop(-3)
-    values.append(temp)
+    values[-4:] = values[-2:] + values[-4:-3]
     print(data)
     print(data_without_history)
     find_dich_vu = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
@@ -1171,11 +1177,16 @@ def get_form_id_dich_vu():
       data[0]['TINH'] = 'No'
     else:
       data[0]['TINH'] = 'Yes'
+    if data[0]['HIEN_HANH'] == 0:
+      data[0]['HIEN_HANH'] = 'No'
+    else:
+      data[0]['HIEN_HANH'] = 'Yes'
     print(data)
     return jsonify(tenDichVu=data[0]['TEN_DICH_VU'],
                    donGia=data[0]['don_gia'],
                    batBuoc=data[0]['BAT_BUOC'],
-                   tinh=data[0]['TINH'])
+                   tinh=data[0]['TINH'],
+                   avail=data[0]['HIEN_HANH'])
   else:
     response = jsonify({"error": "ID dịch vụ không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
@@ -1412,6 +1423,8 @@ def execute_changeNK():
       try:
         delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
         add_change(list_nk[x['cccd']], "Delete", x, stt_idx, list_will_change)
+      except mysql.connector.Error as err:
+        noteDel += f'-cccd {x["cccd"]}: {err}'
       except:
         noteDel += f'-cccd {x["cccd"]} gặp vấn đề trong việc loại bỏ\n'
 
@@ -1429,9 +1442,9 @@ def execute_changeNK():
         continue
     try:
       modify("nhan_khau", x.keys(), x.values(), "cccd", x['cccd'])
-      print("ABC")
       add_change(list_nk[x['cccd']], "Update", x, stt_idx, list_will_change)
-      print("abc")
+    except mysql.connector.Error as err:
+        noteDel += f'-cccd {x["cccd"]}: {err}'
     except:
       noteAdd += f'-cccd {x["cccd"]} gặp vấn đề trong việc cập nhật\n'
 
@@ -1483,7 +1496,8 @@ def execute_changeHK():
       try:
         delete("ho_gd", [('id_ho', f'$ = {x["id_ho"]}')])
         add_change(list_hk[x['id_ho']], "Delete", x, stt_idx, list_will_change)
-
+      except mysql.connector.Error as err:
+        noteDel += f'-id hộ {x["id_ho"]}: {err}'
       except:
         noteDel += f'-id hộ {x["id_ho"]} gặp vấn đề trong việc loại bỏ\n'
 
@@ -1503,6 +1517,8 @@ def execute_changeHK():
     try:
       modify("ho_gd", x.keys(), x.values(), "id_ho", x['id_ho'])
       add_change(list_hk[x['id_ho']], "Update", x, stt_idx, list_will_change)
+    except mysql.connector.Error as err:
+        noteDel += f'-id hộ {x["id_ho"]}: {err}'
     except:
       noteAdd += f'-id hộ {x["id_ho"]} gặp vấn đề trong việc cập nhật\n'
 

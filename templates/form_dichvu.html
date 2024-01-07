@@ -27,9 +27,13 @@
           <option value="Yes">Yes</option>
           <option value="No">No</option>
         </select><br>
+        <label>Hiện hành</label>
+        <select id="avail" name="HIEN_HANH">
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
         <label for="ngaySuaDoi">Ngày sửa đổi:</label>
         <input type="date" id="ngaySuaDoi" name="NGAY_SUA_DOI" required value="{{ today }}"><br>
-        </select><br>
         <button type="submit">Submit</button>
     </form>
     <button type="button" onclick="setDefault()">Reset to Default</button>
@@ -64,6 +68,7 @@
                   document.getElementById('donGia').value = data.donGia;
                   document.getElementById('batBuoc').value = data.batBuoc;
                   document.getElementById('tinh').value = data.tinh;
+                  document.getElementById('avail').value = data.avail;
               })
               .catch(error => {
                 console.error('Error:', error);
@@ -73,6 +78,7 @@
                 document.getElementById('batBuoc').value = '';
                 document.getElementById('idDichVu').value = '';
                 document.getElementById('tinh').value = '';
+                document.getElementById('avail').value = '';
               });
             }
       }

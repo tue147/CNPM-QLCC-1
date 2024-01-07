@@ -22,6 +22,7 @@
                             <option value="donGia">Đơn Giá</option>
                             <option value="batBuoc">Bắt Buộc</option>
                             <option value="tinh">Tính theo diện tích</option>
+                            <option value="hienHanh">Hiện hành</option>
                         </select>
                     </div>
                     <!-- Ô tìm kiếm -->
@@ -38,6 +39,7 @@
                                   <th>Đơn Giá</th>
                                   <th>Bắt Buộc</th>
                                   <th>Tính theo diện tích</th>
+                                  <th>Hiện hành </th>
                               </tr>
                           </thead>
                           <tbody id="tableBody">
@@ -59,6 +61,7 @@
                               <td>${item.don_gia}</td>
                               <td>${item.BAT_BUOC}</td>
                               <td>${item.TINH}</td>
+                              <td>${item.HIEN_HANH === 1 ? "Có" : "Không"}</td>
                           </tr>`;
                           tableBody.innerHTML += row;
                       });
@@ -114,6 +117,8 @@
                   return 3;
               case "tinh":
                   return 4;
+            case "hienHanh":
+                return 5;
               default:
                   return 0;
           }
