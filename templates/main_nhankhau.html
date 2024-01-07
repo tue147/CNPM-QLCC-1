@@ -250,7 +250,7 @@
     }();
     function checkAllBox() {
         document.getElementById('dataTableBody').querySelectorAll("tr").forEach((item) => {
-        item.querySelector("td input[type='checkbox']").checked = this.checked;
+        if (item.style.display === "") item.querySelector("td input[type='checkbox']").checked = this.checked;
       });
     }
     function last_element(item) {
