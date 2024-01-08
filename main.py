@@ -1587,7 +1587,7 @@ def add_change(data, change_name, change_value, x, lc):
 
 @app.route("/api/NK/enhanced_mode", methods=["POST", "GET"])
 def catch_EH_NK():
-  return catching_error(execute_changeNK)
+  return catching_error_fetch(execute_changeNK)
 def execute_changeNK():
   data = json.loads(request.data)
   print(data)
@@ -1698,7 +1698,7 @@ def execute_changeNK():
 
 @app.route("/api/HK/enhanced_mode", methods=["POST", "GET"])
 def catch_EH_HK():
-  return catching_error(execute_changeHK)
+  return catching_error_fetch(execute_changeHK)
 def execute_changeHK():
   data = json.loads(request.data)
   print(data)
