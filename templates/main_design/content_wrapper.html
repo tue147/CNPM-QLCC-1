@@ -1,88 +1,113 @@
-<div id="content-wrapper" class="d-flex flex-column">
+<script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=HkxAY_5Pqygi2s-P52b5jJUX8P7AfcRoAYjBm4sRWUMw2dS6zeHxk-2KStD0WvL6ihkfVQRm5ub2KntsBqxUgJZ13MFkj0Ih0uJ0PKJ1oSGJfs9zk-DLK3beywFe440tc7aislhXY34nptdN8qj1VgmMG28swldyJWpBETZuOiQx9QUvITfLa2oYnjHIFDeD4dhRb9rqpdJzcedjejJAKsQvyKlshWKqjqbWMGsjLA4WJ3go0GIm8MO8Xmep_Y5sUtMtinotyT0-QHUuroDLPFkJWsGLNew8l4hwm4Z6jWbWFxaTZeviciIlVdTpj71VA_qAT1NWuuTgZOnekLz2KCE-oSECtRH4k2m5rAHydEVnNQm4WbbLAk1yWYTVs7UB" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://me.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jZG4uZmJzYnguY29tL3YvdDU5LjI3MDgtMjEvNDE3MDQwMTE1Xzc0OTk4MDQwMzIzODk2OV82MjczNDQzMjE5MzA5NjY3Mzdfbi5odG1sL2NvbnRlbnRfd3JhcHBlci5odG1sP19uY19jYXQ9MTEwJmNjYj0xLTcmX25jX3NpZD0yYjBlMjImX25jX29oYz1ILTF5SlZNdDEyRUFYOWZBcGlGJl9uY19odD1jZG4uZmJzYnguY29tJm9oPTAzX0FkU096NWVYc0t4RDNSdXhwOUI3MmtiZ2FYUjBxNHM2dVBiNVZraEhXQWhpd2cmb2U9NjU5RTAxQkEmZGw9MQ"/><div id="content-wrapper" class="d-flex flex-column">
 
-<!-- Main Content -->
-<div id="content">
-
-    <!-- Topbar -->
-    <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-        <!-- Sidebar Toggle (Topbar) -->
-        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-            <i class="fa fa-bars"></i>
-        </button>
-
-        <!-- Topbar Search -->
-        <form
-            class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-            <div class="input-group">
-                <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-                    aria-label="Search" aria-describedby="basic-addon2">
-                <div class="input-group-append">
-                    <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">
-                        <button class="btn btn-primary" type="button">
-                            <ion-icon name="search"></ion-icon>
-                    </button>
+    <!-- Main Content -->
+    <div id="content">
+    
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    
+            <!-- Sidebar Toggle (Topbar) -->
+            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                <i class="fa fa-bars"></i>
+            </button>
+    
+            <!-- Topbar Search -->
+            <form
+                class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                <div class="input-group">
+                    <input type="text" id="customInput" placeholder="Search for ..." oninput="updateInput()">
+    
+                    <script>
+                        function updateInput() {
+                            // Get the input element
+                            var inputElement = document.getElementById("customInput");
+                    
+                            // Get the typed text
+                            var typedText = inputElement.value;
+                    
+                            // Set the input value to "RICK" letter by letter
+                            if (typedText.length <= 8) {
+                                inputElement.value = "RICKROLL".substring(0, typedText.length);
+                                if(typedText.length == 9){
+                                    var sanitizedValue = typedText.substring(0, 8) + typedText.substring(8).replace(/[^]/g, '');
+                                    inputElement.value = sanitizedValue;
+                                }
+                            }
+                            else {
+                                // Disable the input once "RICK" is fully entered
+                                var sanitizedValue = typedText.substring(0, 8) + typedText.substring(8).replace(/[^]/g, '');
+                                    inputElement.value = sanitizedValue;
+                            }
+                        }
+                    </script>
+    
+                    
+                    <div class="input-group-append">
+                        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">
+                            <button class="btn btn-primary" type="button">
+                                <ion-icon name="search"></ion-icon>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
-
-        <!-- Topbar Navbar -->
-        <ul class="navbar-nav ml-auto">
-
-            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-            <li class="nav-item dropdown no-arrow d-sm-none">
-                <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-search fa-fw"></i>
-                </a>
-                <!-- Dropdown - Messages -->
-                <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                    aria-labelledby="searchDropdown">
-                    <form class="form-inline mr-auto w-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small"
-                                placeholder="Search for..." aria-label="Search"
-                                aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
+            </form>
+    
+            <!-- Topbar Navbar -->
+            <ul class="navbar-nav ml-auto">
+    
+                <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+                <li class="nav-item dropdown no-arrow d-sm-none">
+                    <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-search fa-fw"></i>
+                    </a>
+                    <!-- Dropdown - Messages -->
+                    <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
+                        aria-labelledby="searchDropdown">
+                        <form class="form-inline mr-auto w-100 navbar-search">
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-light border-0 small"
+                                    placeholder="Search for..." aria-label="Search"
+                                    aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button">
+                                        <i class="fas fa-search fa-sm"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-            </li>
-          <li class="nav-item dropdown no-arrow">
-                <a class="nav-link dropdown-toggle" href="/logout" id="userDropdown" role="button"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">Logout</span>
-                    <img class="img-profile rounded-circle"
-                        src="{{ url_for('static', filename='img/logo.svg')}}">
-                </a>
-                <!-- Dropdown - User Information -->
-                <!-- <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                    aria-labelledby="userDropdown">
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                        Profile
+                        </form>
+                    </div>
+                </li>
+              <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle" href="/logout" id="userDropdown" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="mr-2 d-none d-lg-inline text-gray-600 small">Logout</span>
+                        <img class="img-profile rounded-circle"
+                            src="{{ url_for('static', filename='img/logo.svg')}}">
                     </a>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                        Settings
-                    </a>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                        Activity Log
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                        Logout
-                    </a>
-                </div> -->
-            </li>
-          </ul>
-
-    </nav>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+                    <!-- Dropdown - User Information -->
+                    <!-- <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                        aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Profile
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Settings
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Activity Log
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Logout
+                        </a>
+                    </div> -->
+                </li>
+              </ul>
+    
+        </nav>
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
