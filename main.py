@@ -67,6 +67,7 @@ def catching_error_fetch(func,*args, **kwargs):
         backend.cursor = backend.mydb.cursor()
         if backend.cursor:
           return redirect('/admin' if session['admin'] else '/user')
+      response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
       response.status_code = 404  
       return response
   except Error as e:
