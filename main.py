@@ -22,19 +22,26 @@ def catching_error(func,*args, **kwargs):
       backend.mydb = connect_db()
       if backend.mydb:
         backend.cursor = backend.mydb.cursor()
-      # response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
-      # response.status_code = 404  
-      # return response
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
       return render_template('error.html', error_code= "Lỗi mất kết nối với CSDL!")
   except OperationalError as e:
       print("hello111")
       backend.mydb = connect_db()
       if backend.mydb:
         backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
       return render_template('error.html', error_code= "Lỗi mất kết nối với CSDL!")
   except Error as e:
       print("hello2")
       print(e.msg)
+      if (e.msg == "Cursor is not connected"):
+        backend.mydb = connect_db()
+        if backend.mydb:
+          backend.cursor = backend.mydb.cursor()
+          if backend.cursor:
+            return redirect('/admin' if session['admin'] else '/user')
       return render_template('error.html', error_code=e.msg)
   except Exception:
       print("hello1")
@@ -48,6 +55,8 @@ def catching_error_fetch(func,*args, **kwargs):
       backend.mydb = connect_db()
       if backend.mydb:
         backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
       response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
       response.status_code = 404  
       return response
@@ -56,12 +65,18 @@ def catching_error_fetch(func,*args, **kwargs):
       backend.mydb = connect_db()
       if backend.mydb:
         backend.cursor = backend.mydb.cursor()
-      response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
       response.status_code = 404  
       return response
   except Error as e:
       print("hello2")
-      print(e.msg)
+      if (e.msg == "Cursor is not connected"):
+        backend.mydb = connect_db()
+        if backend.mydb:
+          backend.cursor = backend.mydb.cursor()
+          if backend.cursor:
+            return redirect('/admin' if session['admin'] else '/user')
       response = jsonify({"error": "Lỗi xảy ra với CSDL!"})
       response.status_code = 500 
       return response
