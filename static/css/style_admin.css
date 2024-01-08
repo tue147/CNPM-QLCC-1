@@ -9915,6 +9915,7 @@ a:focus {
   background: url('background.jpg') no-repeat;
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
 }
 
 .bg-gradient-secondary {
