@@ -1561,7 +1561,7 @@ def get_form_report():
               [('STT', f'$ = {stt}')])
   print(data)
   if len(data) == 1:
-    if data[0]['id_tai_khoan'] != session['id'] or not session['admin']:
+    if data[0]['id_tai_khoan'] != session['id'] and not session['admin']:
       response = jsonify({"error": "Không có quyền truy nhập"})
       response.status_code = 404  # Set the status code to indicate not found
       return response
