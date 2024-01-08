@@ -809,7 +809,7 @@ def chech_unpaid():
     return response
 
   phi = show(['dich_vu'], ['ID_DICH_VU', 'TEN_DICH_VU'],    # lay cac loai phi bat buoc
-               [('BAT_BUOC', '$ = 1')])
+               [('BAT_BUOC', '$ = 1'), ('HIEN_HANH', '$ = 1')])
   if len(phi) == 0:
     response = jsonify({"error": "Không có phí bắt buộc nào!"})
     response.status_code = 404
@@ -888,6 +888,8 @@ def TC_update():
                              'update',
                              'form_name':
                              'Payment Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          }, today = today)
 
 
@@ -1226,17 +1228,20 @@ def DV_apply(func):
     print(id)
     find_service = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
     if len(find_service) == 1:
-      stt = show(['lich_su_dich_vu'],
-                 special_column_name=[(['stt'], "max({})", "max_stt")],
-                 column_name=[None])
-      delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
-      values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
-                find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
-                find_service[0]['don_gia'], find_service[0]['BAT_BUOC'],
-                find_service[0]['TINH'],time,"Delete"]
-      create('lich_su_dich_vu', [tuple(values)])
-      # commit()
-      return render_template('submit_confirmation.html')
+      try:
+        stt = show(['lich_su_dich_vu'],
+                  special_column_name=[(['stt'], "max({})", "max_stt")],
+                  column_name=[None])
+        delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
+        values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+                  find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
+                  find_service[0]['don_gia'], find_service[0]['BAT_BUOC'],
+                  find_service[0]['TINH'],time,"Delete"]
+        create('lich_su_dich_vu', [tuple(values)])
+        # commit()
+        return render_template('submit_confirmation.html')
+      except:
+        return render_template("error.html")
     else:
       return render_template("error.html")
 
