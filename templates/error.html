@@ -38,7 +38,7 @@
 <body>
     <div class="error-container">
         <h1>Oops!</h1>
-        <p class="error-message">An error occurred. Please try again later.</p>
+        <p class="error-message">{{error_code|default('An error occurred. Please try again later.')}}</p>
         <button class="ok-button" onclick="goToHome()">OK</button>
     </div>
 
