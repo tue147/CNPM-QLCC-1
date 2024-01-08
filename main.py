@@ -1440,16 +1440,16 @@ def execute_changeNK():
   if (len(list_nk) == 0):
     return "Không có thay đổi"
   list_nk = show(['nhan_khau'], ['*'],
-                 [('cccd', f'$ in ({",".join(list_nk)})')],
-                 isLower=True)
+                [('cccd', f'$ in ({",".join(list_nk)})')],
+                isLower=True)
   list_nk = {x['cccd']: x for x in list_nk}
   if (len(list_id) > 0):
     list_id = show(['ho_gd'], ['id_ho'],
-                   [('id_ho', f'$ in ({",".join(list_id)})')])
+                  [('id_ho', f'$ in ({",".join(list_id)})')])
     list_id = {str(x['id_ho']) for x in list_id}
   noteDel = ""
   stt_idx = show(['lich_su_nhan_khau'],
-                 special_column_name=[(['stt'], 'max({})', 'max_stt')
+                special_column_name=[(['stt'], 'max({})', 'max_stt')
                                       ])[0]['max_stt']
   if (stt_idx == None):
     stt_idx = [0]
@@ -1496,6 +1496,10 @@ def execute_changeNK():
       try:
         delete("nhan_khau", [('cccd', f'$ = {x["cccd"]}')])
         add_change(list_nk[x['cccd']], "Delete", x, stt_idx, list_will_change)
+      except mysql.connector.InterfaceError as err:
+        response = jsonify({"error": "STT không tồn tại!"})
+        response.status_code = 404  # Set the status code to indicate not found
+        return response
       except mysql.connector.Error as err:
         noteDel += f'-cccd {x["cccd"]}: {err}'
       except:

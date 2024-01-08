@@ -240,7 +240,10 @@
             body: JSON.stringify(data)
           }).then(response => {
             if (!response.ok) {
-              throw new Error('Execute failed');
+              return response.json().then(errorData => {
+                // Throw an error with the message from your Flask application
+                throw new Error(errorData.error);
+            });
             }
             return response.text();
           }).then(x => {location.reload(); alert(x); }).catch(error => {alert(error);});
