@@ -1,4 +1,4 @@
- :root {
+:root {
   --blue: #4e73df;
   --indigo: #6610f2;
   --purple: #6f42c1;
@@ -55,6 +55,7 @@ body {
   color: #858796;
   text-align: left;
   background-color: #fff;
+  
 }
 
 [tabindex="-1"]:focus:not(:focus-visible) {
@@ -533,7 +534,25 @@ pre code {
   overflow-y: scroll;
 }
 
-.container,
+.container {
+  position: relative;
+    width: 100%;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+  margin-right: auto;
+  margin-left: auto;
+    /* height: 460px; */
+    margin-top: 150px;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,.5);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 30px rgba(200,0,240,.6);
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
 .container-fluid,
 .container-sm,
 .container-md,
@@ -2345,13 +2364,14 @@ fieldset:disabled a.btn {
 
 .btn-primary {
   color: #fff;
-  background-color: #4e73df;
+  position: relative;
+  background-color: #177ddc;
   border-color: #4e73df;
 }
 
 .btn-primary:hover {
   color: #fff;
-  background-color: #2e59d9;
+  background-color: #052978;
   border-color: #2653d4;
 }
 
@@ -4016,6 +4036,8 @@ input[type="button"].btn-block {
 
 .nav-link:hover, .nav-link:focus {
   text-decoration: none;
+  background: #0d5d68;
+  color:#b355b8;
 }
 
 .nav-link.disabled {
@@ -9888,9 +9910,11 @@ a:focus {
 }
 
 .bg-gradient-primary {
-  background-color: #4e73df;
-  background-image: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+  background-color: #f7f7f7;
+  /* background-image: linear-gradient(180deg, #4e73df 10%, #224abe 100%); */
+  background: url('background.jpg') no-repeat;
   background-size: cover;
+  background-position: center;
 }
 
 .bg-gradient-secondary {
@@ -10871,10 +10895,13 @@ form.user .custom-checkbox.small label {
 }
 
 form.user .form-control-user {
-  font-size: 0.8rem;
-  border-radius: 10rem;
-  padding: 1.5rem 1rem;
+  position: relative;
+  width: 100%;
+  height: 50px;
+  border-bottom: 2px solid #162938;
+  margin: 30px 0;
 }
+
 
 form.user .btn-user {
   font-size: 0.8rem;

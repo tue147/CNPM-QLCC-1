@@ -1,16 +1,92 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+import backend
 from backend import *
 import random
 import json
 import datetime
 from datetime import datetime
 from datetime import date
+from mysql.connector import Error, InterfaceError, OperationalError, DatabaseError
 
 app = Flask(__name__,
             static_url_path='',
             static_folder='static',
             template_folder='templates')
 app.secret_key = 'bruh dark lmao'
+
+def catching_error(func,*args, **kwargs):
+  try:
+      return func(*args, **kwargs)
+  except InterfaceError as e:
+      print("hello")
+      backend.mydb = connect_db()
+      if backend.mydb:
+        backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
+      return render_template('error.html', error_code= "Lỗi mất kết nối với CSDL!")
+  except OperationalError as e:
+      print("hello111")
+      backend.mydb = connect_db()
+      if backend.mydb:
+        backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
+      return render_template('error.html', error_code= "Lỗi mất kết nối với CSDL!")
+  except Error as e:
+      print("hello2")
+      print(e.msg)
+      if (e.msg == "Cursor is not connected"):
+        backend.mydb = connect_db()
+        if backend.mydb:
+          backend.cursor = backend.mydb.cursor()
+          if backend.cursor:
+            return redirect('/admin' if session['admin'] else '/user')
+      return render_template('error.html', error_code=e.msg)
+  except Exception:
+      print("hello1")
+      return render_template('error.html', error_code="Internal error. Please try again later!")
+  
+def catching_error_fetch(func,*args, **kwargs):
+  try:
+      return func(*args, **kwargs)
+  except InterfaceError as e:
+      print("hello")
+      backend.mydb = connect_db()
+      if backend.mydb:
+        backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
+      response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
+      response.status_code = 404  
+      return response
+  except OperationalError as e:
+      print("hello111")
+      backend.mydb = connect_db()
+      if backend.mydb:
+        backend.cursor = backend.mydb.cursor()
+        if backend.cursor:
+          return redirect('/admin' if session['admin'] else '/user')
+      response = jsonify({"error": "Lỗi mất kết nối với CSDL!"})
+      response.status_code = 404  
+      return response
+  except Error as e:
+      print("hello2")
+      if (e.msg == "Cursor is not connected"):
+        backend.mydb = connect_db()
+        if backend.mydb:
+          backend.cursor = backend.mydb.cursor()
+          if backend.cursor:
+            return redirect('/admin' if session['admin'] else '/user')
+      response = jsonify({"error": "Lỗi xảy ra với CSDL!"})
+      response.status_code = 500 
+      return response
+  except Exception:
+      print("hello1")
+      response = jsonify({"error": "Internal error. Please try again later!"})
+      response.status_code = 500 
+      return response
+
 
 
 @app.route('/')
@@ -39,6 +115,8 @@ def logout():
 
 
 @app.route('/api/login', methods=['POST'])
+def catch_login_verify():
+  return catching_error(login_verify)
 def login_verify():
   # Expecting JSON data instead of form data
   data = request.get_json()
@@ -46,29 +124,29 @@ def login_verify():
   password = data.get('password')
   print(username, password, data)
 
-  try:
-    find_account = show(['tai_khoan'], ['*'],
-                        [('ten_dang_nhap', f'$ = "{username}"'),
-                         ('mat_khau', f'$ = "{password}"')])
-    if len(find_account) != 1:
-      print("failed")
-      # Returning JSON response with error
-      return jsonify({'error': 'Tài khoản hoặc mật khẩu không tồn tại'}), 401
-    else:
-      print("success", find_account)
-      session['id'] = find_account[0]['ID_TAI_KHOAN']
-      session['admin'] = find_account[0]['ADMIN']
-
-      # Returning JSON response with success status
-      if session['admin']:
-        return jsonify({'redirect': '/admin'}), 200
-      else:
-        return jsonify({'redirect': '/user'}), 200
-
-  except Exception as e:
-    print(e)
+  # try:
+  find_account = show(['tai_khoan'], ['*'],
+                      [('ten_dang_nhap', f'$ = "{username}"'),
+                        ('mat_khau', f'$ = "{password}"')])
+  if len(find_account) != 1:
+    print("failed")
     # Returning JSON response with error
-    return jsonify({'error': 'Internal server error'}), 500
+    return jsonify({'error': 'Tài khoản hoặc mật khẩu không tồn tại'}), 401
+  else:
+    print("success", find_account)
+    session['id'] = find_account[0]['ID_TAI_KHOAN']
+    session['admin'] = find_account[0]['ADMIN']
+
+    # Returning JSON response with success status
+    if session['admin']:
+      return jsonify({'redirect': '/admin'}), 200
+    else:
+      return jsonify({'redirect': '/user'}), 200
+
+  # except Exception as e:
+  #   print(e)
+  #   # Returning JSON response with error
+  #   return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/register')
@@ -98,16 +176,19 @@ def update_account():
 
 @app.route('/ADMIN/delete')
 def delete_account():
+  today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
                              'title': 'Xóa tài khoản',
                              'class': 'ADMIN',
                              'name': 'ID_TAI_KHOAN',
-                             'label': 'ID tài khoản'
-                         })
+                             'label': 'ID tài khoản',
+                         }, today=today)
 
 
 @app.route('/ADMIN/<func>/apply', methods=['POST'])
+def catch_account_apply(func):
+  return catching_error(account_apply,func)
 def account_apply(func):
   if func == 'add':
     # insert taikhoan
@@ -128,10 +209,10 @@ def account_apply(func):
     values.insert(0, id_taikhoan)
     print((values))
     # values.append('test')
-    try:
-      create('tai_khoan', [tuple(values)])
-    except:
-      return render_template('error.html')
+    # try:
+    create('tai_khoan', [tuple(values)])
+    # except:
+    #   return render_template('error.html')
     # commit()
     return render_template('submit_confirmation.html')
 
@@ -145,7 +226,7 @@ def account_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template('error.html')
+      return render_template('error.html', error_code='Không tồn tại tài khoản!')
 
   elif func == "update":
     data = request.form
@@ -157,7 +238,7 @@ def account_apply(func):
                    [('ten_dang_nhap', f'$ = "{tendangnhap}"')])
     id_taikhoan = -1
     if len(account) != 1:
-      return render_template('error.html')
+      return render_template('error.html', error_code = 'Không tồn tại tài khoản!')
     else:
       id_taikhoan = account[0]['ID_TAI_KHOAN']
 
@@ -175,7 +256,7 @@ def account_apply(func):
     return render_template('submit_confirmation.html')
 
   else:
-    return render_template("error.html")
+    return render_template("error.html", "Không có phương thức này!")
 
 
 @app.route('/api/ADMIN/history')
@@ -189,6 +270,8 @@ def user_history():
 
 
 @app.route('/admin')
+def catch_admin():
+  return catching_error(admin)
 def admin():
   data_tk = show(
       ['tai_khoan'],
@@ -205,6 +288,8 @@ def admin():
 
 
 @app.route('/user')
+def catch_user():
+  return catching_error(user)
 def user():
   id_ho = show(['ho_gd'], ['ID_HO'],
                conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
@@ -255,36 +340,40 @@ Ho Khau
 
 
 @app.route('/api/HK/history')
+def catch_HK_history():
+  return catching_error(HK_history)
 def HK_history():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_hk = show(['lich_su_ho_gd'], ['*'])
-        return render_template('main_HK_history.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'HK',
-                                   'data': data_hk,
-                               })  # update for admin
-      else:
-        data_hk = show(['lich_su_ho_gd'], ['*'],
-                       conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        return render_template('main_HK_history.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'HK',
-                                   'data': data_hk
-                               })  # update for user
-  except:
-    pass
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_hk = show(['lich_su_ho_gd'], ['*'])
+      return render_template('main_HK_history.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'HK',
+                                  'data': data_hk,
+                              })  # update for admin
+    else:
+      data_hk = show(['lich_su_ho_gd'], ['*'],
+                      conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+      return render_template('main_HK_history.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'HK',
+                                  'data': data_hk
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/HK')
+def catch_HK():
+  return catching_error(HK)
 def HK():
   # top 100 du lieu trong database
   # all data = [ { ...} ]
-  try:
+  # try:
     if 'id' in session:
       if session['admin']:
         data_hk = show(['ho_gd'], ['*'])
@@ -305,12 +394,14 @@ def HK():
                                    'data': data_hk,
                                    'func': 'hộ khẩu'
                                })  # update for user
-  except:
-    pass
-  return redirect('/login')  # if something wrong: redirect to login
+  # except:
+  #   pass
+  # return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/HK/add')
+def catch_HK_add():
+  return catching_error(HK_add)
 def HK_add():
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -330,6 +421,8 @@ def HK_add():
 
 
 @app.route('/api/HK/update')
+def catch_HK_update():
+  return catching_error(HK_update)
 def HK_update():
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -361,6 +454,8 @@ def HK_delete():
 
 
 @app.route('/api/HK/<func>/apply', methods=['post'])
+def catch_HK_apply(func):
+  return catching_error(HK_apply,func)
 def HK_apply(func):
   data = request.form
 
@@ -383,12 +478,12 @@ def HK_apply(func):
     print((values))
     print(find_idtk)
     if len(find_idtk) != 1:
-      return render_template('error.html')
-    try:
-      create('ho_gd', [tuple(values_without_history)])
-      create('lich_su_ho_gd', [tuple(values)])
-    except:
-      return render_template('error.html')
+      return render_template('error.html', error_code="Không tồn tại tài khoản!")
+    # try:
+    create('ho_gd', [tuple(values_without_history)])
+    create('lich_su_ho_gd', [tuple(values)])
+    # except:
+    #   return render_template('error.html')
     # commit()
     return render_template('submit_confirmation.html')
 
@@ -413,19 +508,19 @@ def HK_apply(func):
     find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
                      [('ID_TAI_KHOAN', f'$ = {data["ID_TAI_KHOAN"]}')])
     if len(find_hogd) == 1 and len(find_idtk) == 1:
-      try:
-        modify('ho_gd',
-               position=data_without_history.keys(),
-               value=data_without_history.values(),
-               index=id,
-               primary_key="ID_HO")
-        create('lich_su_ho_gd', [tuple(values)])
-      except:
-        return render_template('error.html')
+      # try:
+      modify('ho_gd',
+              position=data_without_history.keys(),
+              value=data_without_history.values(),
+              index=id,
+              primary_key="ID_HO")
+      create('lich_su_ho_gd', [tuple(values)])
+      # except:
+      #   return render_template('error.html')
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template('error.html')
+      return render_template('error.html', error_code="Không tồn tại hộ gia đình hoặc không tồn tại tài khoản!")
 
   elif func == "delete":
     id = data.get('ID Hộ')
@@ -433,28 +528,30 @@ def HK_apply(func):
     print(id)
     find_account = show(['ho_gd'], ['*'], [('id_ho', f'$ = {id}')])
     if len(find_account) == 1:
-      try:
-        stt = show(['lich_su_ho_gd'],
-                   special_column_name=[(['stt'], "max({})", "max_stt")],
-                   column_name=[None])
-        delete('ho_gd', conditions=[(id, "ID_HO = $")])
-        values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
-                  find_account[0]['ID_HO'], find_account[0]['CHU_HO'],
-                  find_account[0]['ID_TAI_KHOAN'], find_account[0]['SO_PHONG'],
-                  find_account[0]['LOAI_PHONG'], time, "Delete"]
-        create('lich_su_ho_gd', [tuple(values)])
+      # try:
+      stt = show(['lich_su_ho_gd'],
+                  special_column_name=[(['stt'], "max({})", "max_stt")],
+                  column_name=[None])
+      delete('ho_gd', conditions=[(id, "ID_HO = $")])
+      values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
+                find_account[0]['ID_HO'], find_account[0]['CHU_HO'],
+                find_account[0]['ID_TAI_KHOAN'], find_account[0]['SO_PHONG'],
+                find_account[0]['LOAI_PHONG'], time, "Delete"]
+      create('lich_su_ho_gd', [tuple(values)])
         # commit()
-      except:
-        return render_template('error.html')
+      # except:
+      #   return render_template('error.html')
       return render_template('submit_confirmation.html')
     else:
-      return render_template("error.html")
+      return render_template("error.html", error_code="Không tồn tại hộ gia đình!")
 
   else:
-    return render_template("error.html")
+    return render_template("error.html", error_code="Không tồn tại phương thức này!")
 
 
 @app.route('/api/getFormID_HO')
+def catch_get_form_idHo():
+  return catching_error(get_form_idHo)
 def get_form_idHo():
   idHo = request.args.get('idHo')
   data = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {idHo}')])
@@ -482,81 +579,87 @@ Nhan khau
 
 
 @app.route('/api/NK/history')
+def catch_NK_history():
+  return catching_error(NK_history)
 def NK_history():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_nk = show(['lich_su_nhan_khau'], ['*'])
-        for x in data_nk:
-          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat()
-        return render_template('main_NK_history.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'NK',
-                                   'data': data_nk,
-                               })  # update for admin
-      else:
-        list_hogd = show(['ho_gd'], ['id_ho'],
-                         conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        data_nk = None
-        if len(list_hogd) != 0:
-          data_nk = show(
-              ['lich_su_nhan_khau'], ['*'],
-              conditions=[
-                  ('id_ho',
-                   f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
-              ])
-        return render_template('main_NK_history.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'NK',
-                                   'data': data_nk
-                               })  # update for user
-  except:
-    pass
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_nk = show(['lich_su_nhan_khau'], ['*'])
+      for x in data_nk:
+        x['NGAY_SINH'] = x['NGAY_SINH'].isoformat()
+      return render_template('main_NK_history.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'NK',
+                                  'data': data_nk,
+                              })  # update for admin
+    else:
+      list_hogd = show(['ho_gd'], ['id_ho'],
+                        conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+      data_nk = None
+      if len(list_hogd) != 0:
+        data_nk = show(
+            ['lich_su_nhan_khau'], ['*'],
+            conditions=[
+                ('id_ho',
+                  f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
+            ])
+      return render_template('main_NK_history.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'NK',
+                                  'data': data_nk
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/NK')
+def catch_NK():
+  return catching_error(NK)
 def NK():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_nk = show(['nhan_khau'], ['*'])
-        for x in data_nk:
-          x['NGAY_SINH'] = x['NGAY_SINH'].isoformat() if x['NGAY_SINH'] else None
-        return render_template('main_nhankhau.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'NK',
-                                   'data': data_nk,
-                                   'func': 'nhân khẩu'
-                               })  # update for admin
-      else:
-        list_hogd = show(['ho_gd'], ['id_ho'],
-                         conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
-        data_nk = None
-        if len(list_hogd) != 0:
-          data_nk = show(
-              ['nhan_khau'], ['*'],
-              conditions=[
-                  ('id_ho',
-                   f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
-              ])
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_nk = show(['nhan_khau'], ['*'])
+      for x in data_nk:
+        x['NGAY_SINH'] = x['NGAY_SINH'].isoformat() if x['NGAY_SINH'] else None
+      return render_template('main_nhankhau.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'NK',
+                                  'data': data_nk,
+                                  'func': 'nhân khẩu'
+                              })  # update for admin
+    else:
+      list_hogd = show(['ho_gd'], ['id_ho'],
+                        conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
+      data_nk = None
+      if len(list_hogd) != 0:
+        data_nk = show(
+            ['nhan_khau'], ['*'],
+            conditions=[
+                ('id_ho',
+                  f'$ in ({",".join([str(x["id_ho"]) for x in list_hogd])})')
+            ])
 
-        return render_template('main_nhankhau.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'NK',
-                                   'data': data_nk,
-                                   'func': 'nhân khẩu'
-                               })  # update for user
-  except:
-    pass
+      return render_template('main_nhankhau.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'NK',
+                                  'data': data_nk,
+                                  'func': 'nhân khẩu'
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/NK/add')
+def catch_NK_add():
+  return catching_error(NK_add)
 def NK_add():
   stt = show(['lich_su_nhan_khau'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -577,6 +680,8 @@ def NK_add():
 
 
 @app.route('/api/NK/update')
+def catch_NK_update():
+  return catching_error(NK_update)
 def NK_update():
   stt = show(['lich_su_nhan_khau'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -609,6 +714,8 @@ def NK_delete():
 
 
 @app.route('/api/NK/<func>/apply', methods=['post'])
+def catch_NK_apply(func):
+  return catching_error(NK_apply,func)
 def NK_apply(func):
   data = request.form
 
@@ -629,13 +736,13 @@ def NK_apply(func):
                  [('ID_HO', f'$ = {values_without_history[-1]}')])
     print(id_ho)
     if len(id_ho) != 1:
-      return render_template('error.html')
+      return render_template('error.html', error_code="Không tồn tại hộ gia đình!")
     #   values.append('test')
-    try:
-      create('nhan_khau', [tuple(values_without_history)])
-      create('lich_su_nhan_khau', [tuple(values)])
-    except:
-      return render_template('error.html')
+    # try:
+    create('nhan_khau', [tuple(values_without_history)])
+    create('lich_su_nhan_khau', [tuple(values)])
+    # except:
+    #   return render_template('error.html')
     # commit()
     return render_template('submit_confirmation.html', form=values)
 
@@ -659,20 +766,20 @@ def NK_apply(func):
     id_ho = show(['ho_gd'], ['id_ho'], [('ID_HO', f'$ = {data["ID_HO"]}')])
     print(values)
     print(data_without_history)
-    try:
-      if len(find_cccd) == 1 and len(id_ho) == 1:
-        modify('nhan_khau',
-               position=data_without_history.keys(),
-               value=data_without_history.values(),
-               index=id,
-               primary_key="CCCD")
-        create('lich_su_nhan_khau', [tuple(values)])
-        # commit()
-        return render_template('submit_confirmation.html')
-      else:
-        return render_template('error.html')
-    except:
-      return render_template('error.html')
+    # try:
+    if len(find_cccd) == 1 and len(id_ho) == 1:
+      modify('nhan_khau',
+              position=data_without_history.keys(),
+              value=data_without_history.values(),
+              index=id,
+              primary_key="CCCD")
+      create('lich_su_nhan_khau', [tuple(values)])
+      # commit()
+      return render_template('submit_confirmation.html')
+    else:
+      return render_template('error.html', error_code="Không tồn tại CCCD hoặc không tồn tại hộ gia đình!")
+    # except:
+    #   return render_template('error.html')
 
   elif func == "delete":
     id = data.get('CCCD')
@@ -693,13 +800,15 @@ def NK_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template("error.html")
+      return render_template("error.html", error_code="Không tồn tại CCCD!")
 
   else:
-    return render_template("error.html")
+    return render_template("error.html", error_code="Không tồn tại phương thức này!")
 
 
 @app.route('/api/getFormCCCD')
+def catch_get_form_CCCD():
+  return catching_error_fetch(get_form_CCCD)
 def get_form_CCCD():
   cccd = request.args.get('cccd')
   data = show(['nhan_khau'], ['*'], [('CCCD', f'$ = {cccd}')])
@@ -729,15 +838,18 @@ Thu chi
 
 @app.route('/api/TC/history')
 def TC_history():
-  return render_template('main_TC_unpaid.html',
-                          user={
-                              'user': 'admin',
-                              'USER': 'TC',
-                              'data': [],
-                          })  # update for admin
+  if 'id' in session:
+    return render_template('main_TC_unpaid.html',
+                            user={
+                                'user': 'admin',
+                                'USER': 'TC',
+                                'data': [],
+                            })  # update for admin
 
 
 @app.route('/api/TC')
+def catch_TC():
+  return catching_error(TC)
 def TC():
   # try:
   if 'id' in session:
@@ -751,7 +863,8 @@ def TC():
                                  'user': 'admin',
                                  'USER': 'TC',
                                  'data': data_tc,
-                                 'func': 'thu chi'
+                                 'func': 'thu chi',
+                                 'special':'Phí chưa đóng'
                              })  # update for admin
     else:
       list_hogd = show(['ho_gd'], ['id_ho'],
@@ -771,18 +884,27 @@ def TC():
                                  'user': 'user',
                                  'USER': 'TC',
                                  'data': data_tc,
-                                 'func': 'thu chi'
+                                 'func': 'thu chi',
+                                 'special':'Phí chưa đóng'
                              })  # update for user
   # except:
   #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 @app.route('/api/checkUnPaid')
-def chech_unpaid():
+def catch_checkk_unpaid():
+  return catching_error_fetch(check_unpaid)
+def check_unpaid():
   month = request.args.get('month')
   year = request.args.get('year')
   day = 31
-  id_ho = show(['ho_gd'], ['ID_HO'])   # lay tong id ho
+  id_ho = [{}]
+  if "id" in session:
+    if session['admin']:
+      id_ho = show(['ho_gd'], ['ID_HO'])   # lay tong id ho
+    else:
+      id_ho = show(['ho_gd'], ['ID_HO'], conditions=[('id_tai_khoan', f'$ = {session["id"]}')])  # id_ho theo tai khoan
+
   id_ho_lich_su = show(['lich_su_ho_gd'], ['ID_HO'], [
     ("NGAY_SUA_DOI", f"$ <= \'{date(int(year), int(month), day).isoformat()}\'"),
     ("LOAI_SUA_DOI", f"($ like \'Add\' or $ like \'ADD\' or $ like \'add\')")
@@ -801,7 +923,7 @@ def chech_unpaid():
     return response
 
   phi = show(['dich_vu'], ['ID_DICH_VU', 'TEN_DICH_VU'],    # lay cac loai phi bat buoc
-               [('BAT_BUOC', '$ = 1')])
+               [('BAT_BUOC', '$ = 1'), ('HIEN_HANH', '$ = 1')])
   if len(phi) == 0:
     response = jsonify({"error": "Không có phí bắt buộc nào!"})
     response.status_code = 404
@@ -846,6 +968,8 @@ def chech_unpaid():
   return jsonify(data = store)
 
 @app.route('/api/TC/add')
+def catch_TC_add():
+  return catching_error(TC_add)
 def TC_add():
   stt = show(['thu_chi'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -866,6 +990,8 @@ def TC_add():
 
 
 @app.route('/api/TC/update')
+def catch_TC_update():
+  return catching_error(TC_update)
 def TC_update():
   stt = show(['thu_chi'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -880,6 +1006,8 @@ def TC_update():
                              'update',
                              'form_name':
                              'Payment Form',
+                             'stt': (stt[0]['max_stt'] +
+                                     1) if stt[0]['max_stt'] else 1,
                          }, today = today)
 
 
@@ -896,6 +1024,8 @@ def TC_delete():
 
 
 @app.route('/api/TC/<func>/apply', methods=['post'])
+def catch_TC_apply(func):
+  return catching_error(TC_apply,func)
 def TC_apply(func):
   data = request.form
 
@@ -907,10 +1037,10 @@ def TC_apply(func):
     values.remove(values[2])  # remove name of fee
     #   values.append('test')
     print(values)
-    try:
-      create('thu_chi', [tuple(values)])
-    except:
-      return render_template('error.html')
+    # try:
+    create('thu_chi', [tuple(values)])
+    # except:
+    #   return render_template('error.html')
     # commit()
     return render_template('submit_confirmation.html', form=values)
 
@@ -933,7 +1063,7 @@ def TC_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template('error.html')
+      return render_template('error.html', error_code="Không tồn tại bản thu chi này!")
 
   elif func == "delete":
     id = data.get('STT')
@@ -944,13 +1074,15 @@ def TC_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template("error.html")
+      return render_template("error.html", error_code="Không tồn tại bản thu chi này!")
 
   else:
-    return render_template("error.html")
+    return render_template("error.html", error_code="Không tồn tại phương thức này!")
 
 
 @app.route('/api/getPrice')
+def catch_get_price():
+  return catching_error_fetch(get_price)
 def get_price():
   id_dich_vu = request.args.get('idDichVu')
   id_ho = request.args.get('idHo')
@@ -969,7 +1101,7 @@ def get_price():
   print(data)
   print(max_stt)
   if len(data) == 1 and len(check_id_ho) == 1:
-    try:
+    # try:
       if data[0]['tinh']:
         loai_phong = show(['ho_gd'], ['LOAI_PHONG'], [('ID_HO', f'$ = {id_ho}')])
         if len(loai_phong) == 1:
@@ -984,10 +1116,10 @@ def get_price():
                     stt=max_stt[0]['max_stt'] + 1,
                     soLuong = so_luong
                     )
-    except:
-      response = jsonify({"error": "Lỗi không thể truy nhập vào CSDL!"})
-      response.status_code = 404  # Set the status code to indicate not found
-      return response
+    # except DatabaseError as e:
+    #   response = jsonify({"error": "Lỗi không thể truy nhập vào CSDL!"})
+    #   response.status_code = 404  # Set the status code to indicate not found
+    #   return response
   else:
     response = jsonify({"error": "Dịch vụ hoặc Hộ gia đình không tồn tại!"})
     response.status_code = 404  # Set the status code to indicate not found
@@ -995,6 +1127,8 @@ def get_price():
 
 
 @app.route('/api/getFormSTT')
+def catch_get_form_stt():
+  return catching_error_fetch(get_form_stt)
 def get_form_stt():
   stt = request.args.get('stt')
   data = show(['thu_chi'], ['*'], [('stt', f'$ = {stt}')])
@@ -1021,33 +1155,37 @@ Dich Vu
 
 
 @app.route('/api/DV/history')
-def DV():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_dv = show(['lich_su_dich_vu'], ['*'])
-        print(data_dv)
-        return render_template('main_DV_history.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'DV',
-                                   'data': data_dv,
-                               })  # update for admin
-      else:
-        data_dv = show(['lich_su_dich_vu'], ['*'])
-        return render_template('main_DV_history.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'DV',
-                                   'data': data_dv,
-                               })  # update for user
-  except:
-    pass
+def catch_DV_history():
+  return catching_error(DV_history)
+def DV_history():
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_dv = show(['lich_su_dich_vu'], ['*'])
+      print(data_dv)
+      return render_template('main_DV_history.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'DV',
+                                  'data': data_dv,
+                              })  # update for admin
+    else:
+      data_dv = show(['lich_su_dich_vu'], ['*'])
+      return render_template('main_DV_history.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'DV',
+                                  'data': data_dv,
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/DV')
-def DV_history():
+def catch_DV():
+  return catching_error(DV)
+def DV():
   # try:
   if 'id' in session:
     if session['admin']:
@@ -1075,6 +1213,8 @@ def DV_history():
 
 
 @app.route('/api/DV/add')
+def catch_DV_add():
+  return catching_error(DV_add)
 def DV_add():
   stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -1102,6 +1242,8 @@ def DV_add():
 
 
 @app.route('/api/DV/update')
+def catch_DV_update():
+  return catching_error(DV_update)
 def DV_update():
   stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -1134,6 +1276,8 @@ def DV_delete():
 
 
 @app.route('/api/DV/<func>/apply', methods=['post'])
+def catch_DV_apply(func):
+  return catching_error(DV_apply,func)
 def DV_apply(func):
   data = request.form
 
@@ -1161,11 +1305,11 @@ def DV_apply(func):
     values_without_history = values_without_history[1:7]
     values[-4:] = values[-2:]+values[-4:-3]
     print(values, values_without_history)
-    try:
-      create('dich_vu', [tuple(values_without_history)])
-      create('lich_su_dich_vu', [tuple(values)])
-    except:
-      return render_template('error.html')
+    # try:
+    create('dich_vu', [tuple(values_without_history)])
+    create('lich_su_dich_vu', [tuple(values)])
+    # except:
+    #   return render_template('error.html')
     # commit()
     return render_template('submit_confirmation.html', form=values)
 
@@ -1197,20 +1341,20 @@ def DV_apply(func):
     print(data)
     print(data_without_history)
     find_dich_vu = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
-    try:
-      if len(find_dich_vu) == 1:
-        modify('dich_vu',
-               position=data_without_history.keys(),
-               value=data_without_history.values(),
-               index=id,
-               primary_key="ID_DICH_VU")
-        create('lich_su_dich_vu', [tuple(values)])
-        # commit()
-        return render_template('submit_confirmation.html')
-      else:
-        return render_template('error.html')
-    except:
-      return render_template('error.html')
+    # try:
+    if len(find_dich_vu) == 1:
+      modify('dich_vu',
+              position=data_without_history.keys(),
+              value=data_without_history.values(),
+              index=id,
+              primary_key="ID_DICH_VU")
+      create('lich_su_dich_vu', [tuple(values)])
+      # commit()
+      return render_template('submit_confirmation.html')
+    else:
+      return render_template('error.html', error_code="Không tồn tại dịch vụ này!")
+    # except:
+    #   return render_template('error.html')
 
   elif func == "delete":
     id = data.get('ID_DICH_VU')
@@ -1218,9 +1362,10 @@ def DV_apply(func):
     print(id)
     find_service = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id}')])
     if len(find_service) == 1:
+      # try:
       stt = show(['lich_su_dich_vu'],
-                 special_column_name=[(['stt'], "max({})", "max_stt")],
-                 column_name=[None])
+                special_column_name=[(['stt'], "max({})", "max_stt")],
+                column_name=[None])
       delete('dich_vu', conditions=[(id, "ID_DICH_VU = $")])
       values = [(stt[0]['max_stt'] + 1) if stt[0]['max_stt'] else 1,
                 find_service[0]['ID_DICH_VU'], find_service[0]['TEN_DICH_VU'],
@@ -1229,14 +1374,18 @@ def DV_apply(func):
       create('lich_su_dich_vu', [tuple(values)])
       # commit()
       return render_template('submit_confirmation.html')
+      # except:
+      #   return render_template("error.html")
     else:
-      return render_template("error.html")
+      return render_template("error.html", error_code="Không tồn tại dịch vụ này!")
 
   else:
-    return render_template("error.html")
+    return render_template("error.html", error_code="Không tồn tại phương thức này!")
 
 
 @app.route('/api/getFormID_DICH_VU')
+def catch_get_form_id_dich_vu():
+  return catching_error_fetch(get_form_id_dich_vu)
 def get_form_id_dich_vu():
   id_dv = request.args.get('idDichVu')
   data = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id_dv}')])
@@ -1277,35 +1426,39 @@ def RP_history():
 
 
 @app.route('/api/RP')
+def catch_RP():
+  return catching_error(RP)
 def RP():
-  try:
-    if 'id' in session:
-      if session['admin']:
-        data_rp = show(['report'], ['*'])
-        print(data_rp)
-        return render_template('main_report.html',
-                               user={
-                                   'user': 'admin',
-                                   'USER': 'RP',
-                                   'data': data_rp,
-                                   'func': 'report'
-                               })  # update for admin
-      else:
-        data_rp = show(['report'], ['*'],
-                       conditions=[('ID_TAI_KHOAN', f'$ = {session["id"]}')])
-        return render_template('main_report.html',
-                               user={
-                                   'user': 'user',
-                                   'USER': 'RP',
-                                   'data': data_rp,
-                                   'func': 'report'
-                               })  # update for user
-  except:
-    pass
+  # try:
+  if 'id' in session:
+    if session['admin']:
+      data_rp = show(['report'], ['*'])
+      print(data_rp)
+      return render_template('main_report.html',
+                              user={
+                                  'user': 'admin',
+                                  'USER': 'RP',
+                                  'data': data_rp,
+                                  'func': 'report'
+                              })  # update for admin
+    else:
+      data_rp = show(['report'], ['*'],
+                      conditions=[('ID_TAI_KHOAN', f'$ = {session["id"]}')])
+      return render_template('main_report.html',
+                              user={
+                                  'user': 'user',
+                                  'USER': 'RP',
+                                  'data': data_rp,
+                                  'func': 'report'
+                              })  # update for user
+  # except:
+  #   pass
   return redirect('/login')  # if something wrong: redirect to login
 
 
 @app.route('/api/RP/add')
+def catch_RP_add():
+  return catching_error(RP_add)
 def RP_add():
   stt = show(['report'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
@@ -1350,6 +1503,8 @@ def RP_delete():
 
 
 @app.route('/api/RP/<func>/apply', methods=['post'])
+def catch_RP_apply(func):
+  return catching_error(RP_apply, func)
 def RP_apply(func):
   data = request.form
   if func == "add":
@@ -1378,7 +1533,7 @@ def RP_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template('error.html')
+      return render_template('error.html', error_code="Không tồn tại báo cáo này!")
 
   elif func == "delete":
     id = data.get('STT')
@@ -1391,13 +1546,15 @@ def RP_apply(func):
       # commit()
       return render_template('submit_confirmation.html')
     else:
-      return render_template("error.html")
+      return render_template("error.html", error_code="Không tồn tại báo cáo này!")
 
   else:
-    return render_template('error.html')
+    return render_template('error.html', error_code="Không tồn tại phương thức này!")
 
 
 @app.route('/api/getFormREPORT')
+def catch_get_form_report():
+  return catching_error_fetch(get_form_report)
 def get_form_report():
   stt = request.args.get('stt')
   data = show(['report'], ['NOI_DUNG', 'ID_TAI_KHOAN'],
@@ -1429,6 +1586,8 @@ def add_change(data, change_name, change_value, x, lc):
 
 
 @app.route("/api/NK/enhanced_mode", methods=["POST", "GET"])
+def catch_EH_NK():
+  return catching_error(execute_changeNK)
 def execute_changeNK():
   data = json.loads(request.data)
   print(data)
@@ -1538,6 +1697,8 @@ def execute_changeNK():
 
 
 @app.route("/api/HK/enhanced_mode", methods=["POST", "GET"])
+def catch_EH_HK():
+  return catching_error(execute_changeHK)
 def execute_changeHK():
   data = json.loads(request.data)
   print(data)
@@ -1609,17 +1770,6 @@ def execute_changeHK():
   if (response == ""):
     response = "Thay đổi thành công"
   return response
-
-
-@app.route("/api/TC/enhanced_mode", methods=["POST", "GET"])
-def execute_changeTC():
-  data = json.loads(request.data)
-  print(data)
-  for x in data['delete']:
-    delete("thu_chi", [('stt', f'$ = {x["stt"]}')])
-  for x in data['modify']:
-    modify("thu_chi", x.keys(), x.values(), "stt", x['stt'])
-  return "Xu li thanh cong"
 
 
 if __name__ == '__main__':

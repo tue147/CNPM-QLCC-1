@@ -165,7 +165,6 @@ def show(table_name,
         prefix[x] = f"{table}.{x}"
         return prefix[x]
     assert (False)
-
   full_column_name = [find(x) for x in column_name
                       if x] if column_name else []  # cho phep trong
   #full_column_name = [f"allin.{x}" for x in column_name]
@@ -194,7 +193,7 @@ def show(table_name,
       ]) if condition_aggressive else "",
       f"order by {find(sort_by)}" if sort_by else "",
       f"limit {limit}" if limit else "")
-  print(command)
+  print(cursor)
   cursor.execute(command)
   """for x in cursor:
         print(x)"""
