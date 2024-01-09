@@ -32,7 +32,7 @@
                     </div>
                 </div>
                     <div class="table-responsive">
-                      <table class="table table-bordered" id="serviceTable" width="100%" cellspacing="0">
+                      <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                           <thead>
                               <tr>
                                   <th>STT</th>
@@ -92,7 +92,7 @@
           var input, filter, table, tr, td, i, txtValue, filterValue;
           input = document.getElementById("serviceSearchInput");
           filter = input.value.toUpperCase();
-          table = document.getElementById("serviceTable");
+          table = document.getElementById("dataTable");
           tr = table.getElementsByTagName("tr");
           filterValue = document.getElementById("serviceFilterSelect").value;
 
@@ -135,3 +135,4 @@
   </script>
 
 </div>
+<script src="{{url_for('static', filename='js/multi_search.js')}}"></script>

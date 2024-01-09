@@ -11,7 +11,7 @@
                   <h6 class="m-0 font-weight-bold text-primary">Danh sách báo cáo</h6>
               </div>
               <div class="card-body">
-                  <div class="form-row mb-3">
+                  <div class="form-row mb-3" id="search-box">
                       <!-- Ô dropdown (hộp chọn) -->
                       <div class="col-md-4">
                           <select class="form-control" id="reportFilterSelect">
@@ -19,6 +19,7 @@
                               <option value='stt'>STT</option>
                               <option value="idTaiKhoan">ID tài khoản</option>
                               <option value="noiDung">Nội dung</option>
+                              <option value="ngay">Ngày</option>
                           </select>
                       </div>
                       <!-- Ô tìm kiếm -->
@@ -27,12 +28,13 @@
                       </div>
                   </div>
                       <div class="table-responsive">
-                        <table class="table table-bordered" id="reportTable" width="100%" cellspacing="0">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
                                     <th>STT</th>
                                     <th>ID tài khoản</th>
                                     <th>Nội dung</th>
+                                    <th>Ngày</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
@@ -52,6 +54,7 @@
                                 <td>${item.STT}</td>
                                 <td>${item.ID_TAI_KHOAN}</td>
                                 <td>${item.NOI_DUNG}</td>
+                                <td>${item.NGAY}</td>
                             </tr>`;
                             tableBody.innerHTML += row;
                         });
@@ -77,7 +80,7 @@
             var input, filter, table, tr, td, i, txtValue, filterValue;
             input = document.getElementById("reportSearchInput");
             filter = input.value.toUpperCase();
-            table = document.getElementById("reportTable");
+            table = document.getElementById("dataTable");
             tr = table.getElementsByTagName("tr");
             filterValue = document.getElementById("reportFilterSelect").value;
 
@@ -103,10 +106,13 @@
                     return 1;
                 case "noiDung":
                     return 2;
+                case "ngay":
+                    return 3;
                 default:
                     return 0;
             }
         }
     </script>
+    <script src="{{url_for('static', filename='js/multi_search.js')}}"></script>
 
   </div>

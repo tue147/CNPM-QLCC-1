@@ -54,7 +54,7 @@
                       </div>
                   </div>
                     <div class="table-responsive">
-                      <table class="table table-bordered" id="incomeExpenseTable" width="100%" cellspacing="0">
+                      <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                           <thead>
                               <tr>
                                   <th>ID dịch vụ</th>
@@ -108,7 +108,7 @@
           var input, filter, table, tr, td, i, txtValue, filterValue;
           input = document.getElementById("incomeExpenseSearchInput");
           filter = input.value.toUpperCase();
-          table = document.getElementById("incomeExpenseTable");
+          table = document.getElementById("dataTable");
           tr = table.getElementsByTagName("tr");
           filterValue = document.getElementById("incomeExpenseFilterSelect").value;
 
@@ -139,3 +139,4 @@
           }
       }
   </script>
+  <script src="{{url_for('static', filename='js/multi_search.js')}}"></script>

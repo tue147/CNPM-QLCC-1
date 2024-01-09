@@ -468,7 +468,7 @@ def HK_apply(func):
         0 if item == 'standard' else 1 if item == 'deluxe' else item
         for item in values
     ]
-    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
+    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN','ADMIN'],
                      [('ID_TAI_KHOAN', f'$ = {values[3]}')])
     values.append("Add")
     values_without_history = values.copy()
@@ -480,8 +480,11 @@ def HK_apply(func):
     if len(find_idtk) != 1:
       return render_template('error.html', error_code="Không tồn tại tài khoản!")
     # try:
-    create('ho_gd', [tuple(values_without_history)])
-    create('lich_su_ho_gd', [tuple(values)])
+    if find_idtk[0]['admin'] != 1:
+      create('ho_gd', [tuple(values_without_history)])
+      create('lich_su_ho_gd', [tuple(values)])
+    else:
+      return render_template('error.html', error_code="Không được quyền sử dụng ID tài khoản này!")
     # except:
     #   return render_template('error.html')
     # commit()
@@ -505,16 +508,19 @@ def HK_apply(func):
     del data_without_history['stt']
     del data_without_history['ID_HO']
     find_hogd = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {id}')])
-    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN'],
+    find_idtk = show(['tai_khoan'], ['ID_TAI_KHOAN', 'ADMIN'],
                      [('ID_TAI_KHOAN', f'$ = {data["ID_TAI_KHOAN"]}')])
     if len(find_hogd) == 1 and len(find_idtk) == 1:
       # try:
-      modify('ho_gd',
-              position=data_without_history.keys(),
-              value=data_without_history.values(),
-              index=id,
-              primary_key="ID_HO")
-      create('lich_su_ho_gd', [tuple(values)])
+      if find_idtk[0]['admin'] != 1:
+        modify('ho_gd',
+                position=data_without_history.keys(),
+                value=data_without_history.values(),
+                index=id,
+                primary_key="ID_HO")
+        create('lich_su_ho_gd', [tuple(values)])
+      else:
+        return render_template('error.html', error_code="Không được quyền sử dụng ID tài khoản này!")
       # except:
       #   return render_template('error.html')
       # commit()
@@ -1511,6 +1517,7 @@ def RP_apply(func):
     values = [data.get(key) for key in data]
     values.insert(1, session['id'])
     print(values)
+    values[-2] = values[-2].replace("\r\n", "")
     # try:
     create('report', [tuple(values)])
     # commit()
@@ -1522,6 +1529,7 @@ def RP_apply(func):
     id = data.get('STT')
     data = {k: v for k, v in data.items() if k != 'STT'}
     data["ID_TAI_KHOAN"] = session['id']
+    data["NOI_DUNG"] = data["NOI_DUNG"].replace("\r\n", "")
     print(data)
     find_stt = show(['report'], ['STT'], [('STT', f'$ = {id}')])
     if len(find_stt) == 1:
