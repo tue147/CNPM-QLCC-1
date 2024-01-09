@@ -11,7 +11,7 @@
         <form id="FormDelete">
           <div class="form-group">
             <label for="numberInput">{{format['label']}}</label>
-            <input type="number" id="{{format['name']}}" name="{{format['name']}}">
+            <input type="number" id="{{format['name']}}" name="{{format['name']}}" required>
             <label for="ngayThayDoi">Ngày Thay Đổi:</label>
             <input type="date" id="ngayThayDoi" name="NGAY_THAY_DOI" required value="{{ today }}"><br>
             <button type="submit">Submit</button>

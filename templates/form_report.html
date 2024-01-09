@@ -10,7 +10,7 @@
     <h2>{{report['title']}}</h2>
       <div class="form-group">
         <label for="stt">STT</label>
-        <input type="text" id="stt" name="STT"  value="{{report['stt']}}" onchange="updateFormSTT()">
+        <input type="text" id="stt" name="STT" required value="{{report['stt']}}" onchange="updateFormSTT()">
       </div>
       <div class="form-group">
         <label for="noi_dung">Nội dung</label>
@@ -20,6 +20,7 @@
       </div>
       <input type="submit" value="Submit" style="width:20%;">
   <button type="button" onclick="setDefault()" style="border-radius:4px; padding: 10px 20px;">Reset</button>
+</form>
   </div>
 </body>
   </div>

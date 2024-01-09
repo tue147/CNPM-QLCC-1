@@ -119,6 +119,8 @@ def catch_login_verify():
   return catching_error(login_verify)
 def login_verify():
   # Expecting JSON data instead of form data
+  # if 'id' in session:
+  #   return redirect('/login')
   data = request.get_json()
   username = data.get('username')
   password = data.get('password')
@@ -156,6 +158,11 @@ def register():
 
 @app.route('/ADMIN/add')
 def add_account():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   return render_template('form_taikhoan.html',
                          taikhoan={
                              'title': 'Thêm Tài Khoản',
@@ -166,6 +173,11 @@ def add_account():
 
 @app.route('/ADMIN/update')
 def update_account():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   return render_template('form_taikhoan.html',
                          taikhoan={
                              'title': 'Update Tài Khoản',
@@ -176,6 +188,11 @@ def update_account():
 
 @app.route('/ADMIN/delete')
 def delete_account():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
@@ -190,6 +207,11 @@ def delete_account():
 def catch_account_apply(func):
   return catching_error(account_apply,func)
 def account_apply(func):
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   if func == 'add':
     # insert taikhoan
     data = request.form
@@ -219,9 +241,19 @@ def account_apply(func):
   elif func == "delete":
     data = request.form
     id = data.get('ID_TAI_KHOAN')
+    if int(id) == session['id']:  # cai nay fix luon viec khong the xoa tk admin cuoi cung
+      return render_template('error.html', error_code = 'Không thể xóa tài khoản của chính mình!')
     print(id)
     find_account = show(['tai_khoan'], ['*'], [('ID_TAI_KHOAN', f'$ = {id}')])
     if len(find_account) == 1:
+      # if find_account[0]['ADMIN']:
+      #   count_admin = show(['tai_khoan'], 
+      #                     special_column_name=[(['admin'], "count({})", "so_tk_admin")],
+      #                     column_name=[None],conditions=[('admin', '$ = 1')])
+      #   print(count_admin)
+      # if len(count_admin) == 1 and count_admin[0]['so_tk_admin']==1:
+      #   return render_template('error.html', error_code = 'Không thể xóa tài khoản admin cuối cùng!')
+      
       delete('tai_khoan', conditions=[(id, "ID_TAI_KHOAN = $")])
       # commit()
       return render_template('submit_confirmation.html')
@@ -236,11 +268,19 @@ def account_apply(func):
     # check ten dang nhap
     account = show(['tai_khoan'], ['*'],
                    [('ten_dang_nhap', f'$ = "{tendangnhap}"')])
+    print(account)
     id_taikhoan = -1
     if len(account) != 1:
       return render_template('error.html', error_code = 'Không tồn tại tài khoản!')
     else:
       id_taikhoan = account[0]['ID_TAI_KHOAN']
+    if account[0]['ADMIN']:
+      count_admin = show(['tai_khoan'], 
+                        special_column_name=[(['admin'], "count({})", "so_tk_admin")],
+                        column_name=[None],conditions=[('admin', '$ = 1')])
+      print(count_admin)
+      if len(count_admin) == 1 and count_admin[0]['so_tk_admin']==1:
+        return render_template('error.html', error_code = 'Không thể thay đổi tài khoản admin cuối cùng!')
 
     if data['ADMIN'] == 'Admin':
       data['ADMIN'] = 1
@@ -261,11 +301,21 @@ def account_apply(func):
 
 @app.route('/api/ADMIN/history')
 def admin_history():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   return redirect('/admin')
 
 
 @app.route('/api/USER/history')
 def user_history():
+  if 'id' in session:
+    if session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   return redirect('/user')
 
 
@@ -273,6 +323,11 @@ def user_history():
 def catch_admin():
   return catching_error(admin)
 def admin():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data_tk = show(
       ['tai_khoan'],
       ['*'],
@@ -291,6 +346,11 @@ def admin():
 def catch_user():
   return catching_error(user)
 def user():
+  if 'id' in session:
+    if   session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   id_ho = show(['ho_gd'], ['ID_HO'],
                conditions=[('id_tai_khoan', f'$ = {session["id"]}')])
   print(id_ho)
@@ -403,6 +463,11 @@ def HK():
 def catch_HK_add():
   return catching_error(HK_add)
 def HK_add():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -424,6 +489,11 @@ def HK_add():
 def catch_HK_update():
   return catching_error(HK_update)
 def HK_update():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_ho_gd'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -443,6 +513,11 @@ def HK_update():
 
 @app.route('/api/HK/delete')
 def HK_delete():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
@@ -457,6 +532,11 @@ def HK_delete():
 def catch_HK_apply(func):
   return catching_error(HK_apply,func)
 def HK_apply(func):
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = request.form
 
   if func == "add":
@@ -559,6 +639,11 @@ def HK_apply(func):
 def catch_get_form_idHo():
   return catching_error(get_form_idHo)
 def get_form_idHo():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   idHo = request.args.get('idHo')
   data = show(['ho_gd'], ['*'], [('ID_HO', f'$ = {idHo}')])
   print(data)
@@ -667,6 +752,11 @@ def NK():
 def catch_NK_add():
   return catching_error(NK_add)
 def NK_add():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_nhan_khau'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -689,6 +779,11 @@ def NK_add():
 def catch_NK_update():
   return catching_error(NK_update)
 def NK_update():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_nhan_khau'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -709,6 +804,11 @@ def NK_update():
 
 @app.route('/api/NK/delete')
 def NK_delete():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
@@ -723,6 +823,11 @@ def NK_delete():
 def catch_NK_apply(func):
   return catching_error(NK_apply,func)
 def NK_apply(func):
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = request.form
 
   if func == "add":
@@ -816,6 +921,11 @@ def NK_apply(func):
 def catch_get_form_CCCD():
   return catching_error_fetch(get_form_CCCD)
 def get_form_CCCD():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   cccd = request.args.get('cccd')
   data = show(['nhan_khau'], ['*'], [('CCCD', f'$ = {cccd}')])
   print(data)
@@ -903,7 +1013,7 @@ def catch_checkk_unpaid():
 def check_unpaid():
   month = request.args.get('month')
   year = request.args.get('year')
-  day = 31
+  day = [31,28,31,30,31,30,31,31,30,31,30,31]
   id_ho = [{}]
   if "id" in session:
     if session['admin']:
@@ -912,7 +1022,7 @@ def check_unpaid():
       id_ho = show(['ho_gd'], ['ID_HO'], conditions=[('id_tai_khoan', f'$ = {session["id"]}')])  # id_ho theo tai khoan
 
   id_ho_lich_su = show(['lich_su_ho_gd'], ['ID_HO'], [
-    ("NGAY_SUA_DOI", f"$ <= \'{date(int(year), int(month), day).isoformat()}\'"),
+    ("NGAY_SUA_DOI", f"$ <= \'{date(int(year), int(month), day[int(month)-1]).isoformat()}\'"),
     ("LOAI_SUA_DOI", f"($ like \'Add\' or $ like \'ADD\' or $ like \'add\')")
   ])
   print(id_ho_lich_su)
@@ -977,6 +1087,11 @@ def check_unpaid():
 def catch_TC_add():
   return catching_error(TC_add)
 def TC_add():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['thu_chi'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -999,6 +1114,11 @@ def TC_add():
 def catch_TC_update():
   return catching_error(TC_update)
 def TC_update():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['thu_chi'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -1019,6 +1139,11 @@ def TC_update():
 
 @app.route('/api/TC/delete')
 def TC_delete():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
@@ -1033,6 +1158,11 @@ def TC_delete():
 def catch_TC_apply(func):
   return catching_error(TC_apply,func)
 def TC_apply(func):
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = request.form
 
   if func == "add":
@@ -1090,6 +1220,11 @@ def TC_apply(func):
 def catch_get_price():
   return catching_error_fetch(get_price)
 def get_price():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   id_dich_vu = request.args.get('idDichVu')
   id_ho = request.args.get('idHo')
   so_luong = request.args.get('soLuong')
@@ -1136,6 +1271,11 @@ def get_price():
 def catch_get_form_stt():
   return catching_error_fetch(get_form_stt)
 def get_form_stt():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = request.args.get('stt')
   data = show(['thu_chi'], ['*'], [('stt', f'$ = {stt}')])
   print(data)
@@ -1222,6 +1362,11 @@ def DV():
 def catch_DV_add():
   return catching_error(DV_add)
 def DV_add():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -1251,6 +1396,11 @@ def DV_add():
 def catch_DV_update():
   return catching_error(DV_update)
 def DV_update():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   stt = show(['lich_su_dich_vu'],
              special_column_name=[(['stt'], "max({})", "max_stt")],
              column_name=[None])
@@ -1271,6 +1421,11 @@ def DV_update():
 
 @app.route('/api/DV/delete')
 def DV_delete():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_delete.html',
                          format={
@@ -1285,6 +1440,11 @@ def DV_delete():
 def catch_DV_apply(func):
   return catching_error(DV_apply,func)
 def DV_apply(func):
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = request.form
 
   if func == "add":
@@ -1393,6 +1553,11 @@ def DV_apply(func):
 def catch_get_form_id_dich_vu():
   return catching_error_fetch(get_form_id_dich_vu)
 def get_form_id_dich_vu():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   id_dv = request.args.get('idDichVu')
   data = show(['dich_vu'], ['*'], [('ID_DICH_VU', f'$ = {id_dv}')])
   print(data)
@@ -1492,7 +1657,7 @@ def RP_update():
                              'title': 'Cập nhật Report',
                              'func': 'update',
                              'form_name': 'Report Form',
-                             'stt': " ",
+                             'stt': "",
                          }, today = today)
 
 
@@ -1565,6 +1730,15 @@ def catch_get_form_report():
   return catching_error_fetch(get_form_report)
 def get_form_report():
   stt = request.args.get('stt')
+  try:
+    if not stt.isnumeric():
+      response = jsonify({"error": "Hãy nhập đúng STT!"})
+      response.status_code = 404
+      return response
+  except:
+    response = jsonify({"error": "Ký tự không hợp lệ!"})
+    response.status_code = 404
+    return response
   data = show(['report'], ['NOI_DUNG', 'ID_TAI_KHOAN'],
               [('STT', f'$ = {stt}')])
   print(data)
@@ -1597,6 +1771,11 @@ def add_change(data, change_name, change_value, x, lc):
 def catch_EH_NK():
   return catching_error_fetch(execute_changeNK)
 def execute_changeNK():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = json.loads(request.data)
   print(data)
   list_nk = {x['cccd'] for x in data['modify'] + data['delete']}
@@ -1708,6 +1887,11 @@ def execute_changeNK():
 def catch_EH_HK():
   return catching_error_fetch(execute_changeHK)
 def execute_changeHK():
+  if 'id' in session:
+    if not session['admin']:
+      return redirect('/')
+  else:
+    return redirect('/')
   data = json.loads(request.data)
   print(data)
   list_hk = {x['id_ho'] for x in data['modify'] + data['delete']}
