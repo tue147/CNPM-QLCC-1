@@ -1119,10 +1119,6 @@ def TC_update():
       return redirect('/')
   else:
     return redirect('/')
-  stt = show(['thu_chi'],
-             special_column_name=[(['stt'], "max({})", "max_stt")],
-             column_name=[None])
-  print(stt)
   today = datetime.now().strftime('%Y-%m-%d')
   return render_template('form_thuchi.html',
                          thuchi={
@@ -1132,8 +1128,8 @@ def TC_update():
                              'update',
                              'form_name':
                              'Payment Form',
-                             'stt': (stt[0]['max_stt'] +
-                                     1) if stt[0]['max_stt'] else 1,
+                             'stt': 
+                              "",
                          }, today = today)
 
 
@@ -1277,6 +1273,10 @@ def get_form_stt():
   else:
     return redirect('/')
   stt = request.args.get('stt')
+  if not stt.isnumeric():
+      response = jsonify({"error": "Hãy nhập đúng STT!"})
+      response.status_code = 404
+      return response
   data = show(['thu_chi'], ['*'], [('stt', f'$ = {stt}')])
   print(data)
   if len(data) == 1:
